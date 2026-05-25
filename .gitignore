@@ -1,0 +1,39 @@
+# --- IDE & Projekt fájlok ---
+.idea
+.vscode
+nbproject
+.buildpath
+.project
+.settings
+
+# --- OS specifikus ---
+Thumbs.db
+.DS_Store
+
+# --- Composer & Vendor ---
+/vendor
+composer.phar
+
+# --- Tesztelés ---
+phpunit.phar
+/phpunit.xml
+tests/_output/*
+tests/_support/_generated
+
+# --- Vagrant ---
+/.vagrant
+
+# --- BIZTONSÁG & KONFIGURÁCIÓ (FONTOS KIEGÉSZÍTÉS!) ---
+# Ne kerüljön fel az adatbázis jelszó és API kulcs!
+.env
+.env.local
+config/db.php
+config/params-local.php
+config/web-local.php
+config/console-local.php
+
+# --- Logok & Runtime (Yii2 specifikus) ---
+/runtime/*
+!/runtime/.gitignore
+/web/assets/*
+!/web/assets/.gitignore
