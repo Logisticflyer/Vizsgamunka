@@ -47,6 +47,15 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15
             </a>
         </div>
     </div>
+
+    <div class="row justify-content-center mt-5">
+        <div class="col-12 col-lg-10">
+            <div class="3d-box-wrapper">
+                <h4 class="text-center mb-3 text-muted" style="font-size: 16px; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase;">Interaktív 3D Élmény</h4>
+                <div id="3d-container"></div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <style>
@@ -160,6 +169,23 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15
     gap: 12px;
 }
 
+/* AZ ÚJ 3D DOBOZ STÍLUSA */
+.3d-box-wrapper {
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 20px;
+    border: 1px solid #e5e5e7;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+}
+
+#3d-container {
+    width: 100%;
+    height: 350px;
+    background-color: #000000; /* Fekete háttér a 3D térnek */
+    border-radius: 12px;
+    overflow: hidden;
+}
+
 @media (max-width: 768px) {
     .choose-container {
         padding: 60px 16px;
@@ -175,6 +201,10 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15
 
     .service-card {
         padding: 32px 24px;
+    }
+    
+    #3d-container {
+        height: 250px;
     }
 }
 </style>
