@@ -12,21 +12,23 @@ use yii\web\AssetBundle;
 
 /**
  * Main application asset bundle.
- *
- * @author Qiang Xue <qiang.xue@gmail.com>
- * @since 2.0
  */
 class AppAsset extends AssetBundle
 {
     public $basePath = '@webroot';
     public $baseUrl = '@web';
+    
     public $css = [
         'css/site.css',
     ];
+
     public $js = [
+        // Ide írd be a három pontot és a fájlodat:
+        'js/three-init.js', 
     ];
+
     public $depends = [
         'yii\web\YiiAsset',
-        'yii\bootstrap5\BootstrapAsset'
+        'yii\bootstrap5\BootstrapAsset',
     ];
 }

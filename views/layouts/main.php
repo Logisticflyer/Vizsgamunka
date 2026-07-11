@@ -32,6 +32,9 @@ $isAuthPage = (($currentController === 'site' && in_array($currentAction, ['inde
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php $this->registerCsrfMetaTags() ?>
     <title><?= Html::encode($this->title) ?></title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
     <?php $this->head() ?>
 </head>
 <body class="hold-transition <?= $isAuthPage ? '' : 'sidebar-mini' ?>">
@@ -48,7 +51,7 @@ $isAuthPage = (($currentController === 'site' && in_array($currentAction, ['inde
         <?= $this->render('control-sidebar') ?>
     <?php endif; ?>
 
-<?= $this->render('footer') ?>
+    <?= $this->render('footer') ?>
 </div>
 
 <?php if ($isAuthPage): ?>
