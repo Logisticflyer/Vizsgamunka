@@ -13,7 +13,7 @@ $config = [
     ],
     'components' => [
         'request' => [
-            'baseUrl' => '',
+            'baseUrl' => '/vizsgamunka/web',
             'cookieValidationKey' => '8JBN6Cf8c-zjB7buBMKpiMQzXor_9Cyt',
         ],
         'cache' => [
@@ -46,8 +46,8 @@ $config = [
         ],
         'db' => $db,
         'urlManager' => [
-            'enablePrettyUrl' => true,
-            'showScriptName' => false,
+            'enablePrettyUrl' => false,
+            'showScriptName' => true,
             'rules' => [
             ],
         ],
