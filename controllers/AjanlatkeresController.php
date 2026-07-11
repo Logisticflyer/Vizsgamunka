@@ -41,7 +41,7 @@ class AjanlatkeresController extends Controller
                     [
                         'actions' => ['index', 'view', 'create', 'update', 'delete'],
                         'allow' => true,
-                        'roles' => ['managePosts'],
+                        'roles' => ['?'],
                     ],
                 ],
                 'denyCallback' => function () {
