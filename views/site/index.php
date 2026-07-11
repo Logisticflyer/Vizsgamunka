@@ -1,11 +1,10 @@
 <?php
 
 use yii\helpers\Url;
-use yii\widgets\ActiveForm; 
+use yii\widgets\ActiveForm;
 
 $this->title = 'Főoldal';
 
-// Biztosítjuk, hogy ha a kontroller nem passzolta át a regisztrációs modellt, ne dőljön össze a kód
 if (!isset($signupModel)) {
     $signupModel = new \app\models\SignupForm();
 }
@@ -15,6 +14,7 @@ if (!isset($signupModel)) {
     <div class="hero-section">
         <h1>Digitális Precizitás & Automatizáció</h1>
         <p>Üdvözlünk a platformon. Optimalizáld a munkafolyamataidat fejlett AI asszisztensekkel vagy egyedi 3D tervezéssel egyetlen felületen.</p>
+
         <div class="hero-buttons">
             <a href="<?= Url::to(['/site/choose']) ?>" class="btn-main">Szolgáltatások felfedezése</a>
             <a href="#ajanlat-zone" class="btn-secondary" style="color: #0071e3; font-weight: 500; text-decoration: none;">Ajánlatkérés</a>
@@ -34,8 +34,8 @@ if (!isset($signupModel)) {
     <div id="auth-zone" class="auth-section">
         <div class="auth-card">
             <div class="auth-tabs">
-                <button id="tab-login" class="auth-tab active" onclick="switchAuth('login')">Bejelentkezés</button>
-                <button id="tab-register" class="auth-tab" onclick="switchAuth('register')">Regisztráció</button>
+                <button id="tab-login" class="auth-tab active" type="button" onclick="switchAuth('login')">Bejelentkezés</button>
+                <button id="tab-register" class="auth-tab" type="button" onclick="switchAuth('register')">Regisztráció</button>
             </div>
 
             <div id="form-login" class="auth-form-wrapper">
@@ -51,7 +51,7 @@ if (!isset($signupModel)) {
                     <div class="form-group" style="margin-bottom: 20px;">
                         <label style="display: block; font-weight: 600; text-transform: uppercase; font-size: 12px; color: #86868b; margin-bottom: 8px; text-align: left;">Felhasználónév</label>
                         <?= $formLogin->field($model, 'username')->textInput([
-                            'class' => 'form-control', 
+                            'class' => 'form-control',
                             'placeholder' => 'Felhasználónév vagy email',
                             'style' => 'width: 100%; padding: 14px; border: 1px solid #d2d2d7; border-radius: 12px; font-size: 16px; background-color: #f5f5f7;'
                         ]) ?>
@@ -60,7 +60,7 @@ if (!isset($signupModel)) {
                     <div class="form-group" style="margin-bottom: 25px;">
                         <label style="display: block; font-weight: 600; text-transform: uppercase; font-size: 12px; color: #86868b; margin-bottom: 8px; text-align: left;">Jelszó</label>
                         <?= $formLogin->field($model, 'password')->passwordInput([
-                            'class' => 'form-control', 
+                            'class' => 'form-control',
                             'placeholder' => '••••••••',
                             'style' => 'width: 100%; padding: 14px; border: 1px solid #d2d2d7; border-radius: 12px; font-size: 16px; background-color: #f5f5f7;'
                         ]) ?>
@@ -73,9 +73,9 @@ if (!isset($signupModel)) {
                     </div>
 
                     <button type="submit" class="btn-auth" name="login-button">Belépés</button>
-                    
+
                     <div class="oauth-divider"><span>vagy lépj be amivel kényelmesebb</span></div>
-                    
+
                     <a href="#" class="btn-google">
                         <i class="fab fa-google"></i> Belépés Google fiókkal
                     </a>
@@ -86,7 +86,7 @@ if (!isset($signupModel)) {
             <div id="form-register" class="auth-form-wrapper" style="display: none;">
                 <?php $formSignup = ActiveForm::begin([
                     'id' => 'signup-form',
-                    'action' => ['site/signup'], 
+                    'action' => ['site/signup'],
                     'options' => ['class' => 'minimal-form', 'method' => 'post'],
                     'fieldConfig' => [
                         'template' => "{input}\n{error}",
@@ -94,20 +94,20 @@ if (!isset($signupModel)) {
                 ]); ?>
 
                     <p style="color: #86868b; text-align: center; margin-bottom: 20px;">Hozd létre a fiókodat a folytatáshoz.</p>
-                    
+
                     <div class="form-group" style="margin-bottom: 20px;">
                         <label style="display: block; font-weight: 600; text-transform: uppercase; font-size: 12px; color: #86868b; margin-bottom: 8px; text-align: left;">Felhasználónév</label>
                         <?= $formSignup->field($signupModel, 'username')->textInput([
-                            'class' => 'form-control', 
+                            'class' => 'form-control',
                             'placeholder' => 'Pl. ujfelhasznalo',
                             'style' => 'width: 100%; padding: 14px; border: 1px solid #d2d2d7; border-radius: 12px; font-size: 16px; background-color: #f5f5f7;'
                         ]) ?>
                     </div>
-                    
+
                     <div class="form-group" style="margin-bottom: 20px;">
                         <label style="display: block; font-weight: 600; text-transform: uppercase; font-size: 12px; color: #86868b; margin-bottom: 8px; text-align: left;">E-mail cím</label>
                         <?= $formSignup->field($signupModel, 'email')->input('email', [
-                            'class' => 'form-control', 
+                            'class' => 'form-control',
                             'placeholder' => 'pelda@domain.com',
                             'style' => 'width: 100%; padding: 14px; border: 1px solid #d2d2d7; border-radius: 12px; font-size: 16px; background-color: #f5f5f7;'
                         ]) ?>
@@ -116,7 +116,7 @@ if (!isset($signupModel)) {
                     <div class="form-group" style="margin-bottom: 25px;">
                         <label style="display: block; font-weight: 600; text-transform: uppercase; font-size: 12px; color: #86868b; margin-bottom: 8px; text-align: left;">Jelszó</label>
                         <?= $formSignup->field($signupModel, 'password')->passwordInput([
-                            'class' => 'form-control', 
+                            'class' => 'form-control',
                             'placeholder' => '••••••••',
                             'style' => 'width: 100%; padding: 14px; border: 1px solid #d2d2d7; border-radius: 12px; font-size: 16px; background-color: #f5f5f7;'
                         ]) ?>
@@ -133,10 +133,10 @@ if (!isset($signupModel)) {
         <div class="ajanlat-card">
             <h2 class="ajanlat-title"><i class="fas fa-paper-plane text-primary mr-2"></i> Kérjen Egyedi Ajánlatot</h2>
             <p class="ajanlat-subtitle">Küldje el elképzeléseit aszinkron módon, és munkatársunk azonnal feldolgozza azt.</p>
-            
+
             <div id="form-alert" class="custom-alert d-none"></div>
 
-            <form id="ajax-ajanlatkeres-form" class="minimal-form">
+            <form id="ajax-ajanlatkeres-form" class="minimal-form" action="javascript:void(0);" method="post">
                 <div class="form-group">
                     <label class="form-label">Az Ön Neve</label>
                     <input type="text" name="nev" class="form-input" placeholder="Pl.: Teszt Máté" required>
@@ -145,6 +145,11 @@ if (!isset($signupModel)) {
                 <div class="form-group">
                     <label class="form-label">E-mail Címe</label>
                     <input type="email" name="email" class="form-input" placeholder="minta@email.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Projekt Tárgya</label>
+                    <input type="text" name="targy" class="form-input" placeholder="Pl.: AI ügyfélszolgálati automatizáció" required>
                 </div>
 
                 <div class="form-group">
@@ -158,7 +163,7 @@ if (!isset($signupModel)) {
 
                 <div class="form-group">
                     <label class="form-label">Projekt Rövid Leírása</label>
-                    <textarea name="targy" rows="4" class="form-input" style="height: auto; resize: none;" placeholder="Írja le röviden a projekt elképzeléseit és céljait..." required></textarea>
+                    <textarea name="leiras" rows="4" class="form-input" style="height: auto; resize: none;" placeholder="Írja le röviden a projekt elképzeléseit és céljait..." required></textarea>
                 </div>
 
                 <button type="submit" id="submit-btn" class="btn-auth" style="background: #0071e3;">
@@ -190,18 +195,18 @@ function switchAuth(type) {
     }
 }
 
-$(document).ready(function() {
-    // URL PARAMÉTER ÉRZÉKELÉSE ÉS AUTOMATIKUS FINOM GÖRDÍTÉS
+$(document).ready(function () {
     const urlParams = new URLSearchParams(window.location.search);
+
     if (urlParams.has('type')) {
         let projectType = urlParams.get('type');
-        
         let $selectField = $('select[name="tipus"]');
+
         if ($selectField.length > 0) {
             $selectField.val(projectType).trigger('change');
         }
 
-        setTimeout(function() {
+        setTimeout(function () {
             let $target = $("#ajanlat-zone");
             if ($target.length > 0) {
                 $('html, body').animate({
@@ -211,8 +216,7 @@ $(document).ready(function() {
         }, 200);
     }
 
-    // AJAX AJÁNLATKÉRŐ FORM SUBMIT ESEMÉNYKEZELŐ
-    $('#ajax-ajanlatkeres-form').on('submit', function(e) {
+    $('#ajax-ajanlatkeres-form').on('submit', function (e) {
         e.preventDefault();
 
         let $form = $(this);
@@ -220,26 +224,27 @@ $(document).ready(function() {
         let $alert = $('#form-alert');
 
         $submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Feldolgozás...');
+        $alert.addClass('d-none').removeClass('alert-error alert-success').text('');
 
         $.ajax({
             url: '<?= Url::to(['ajanlatkeres/bekuldes']) ?>',
             type: 'POST',
             data: $form.serialize(),
             dataType: 'json',
-            success: function(response) {
-                $alert.addClass('d-none').removeClass('alert-error alert-success');
-                
+            success: function (response) {
+                $alert.removeClass('d-none alert-error alert-success');
+
                 if (response.success) {
-                    $alert.removeClass('d-none').addClass('alert-success').text(response.message);
+                    $alert.addClass('alert-success').text(response.message);
                     $form[0].reset();
                 } else {
-                    $alert.removeClass('d-none').addClass('alert-error').text(response.message);
+                    $alert.addClass('alert-error').text(response.message || 'A mentés sikertelen.');
                 }
             },
-            error: function() {
+            error: function () {
                 $alert.removeClass('d-none alert-success').addClass('alert-error').text('Szerver kommunikációs hiba történt!');
             },
-            complete: function() {
+            complete: function () {
                 $submitBtn.prop('disabled', false).html('<i class="fas fa-paper-plane mr-1"></i> Ajánlatkérés Elküldése');
             }
         });

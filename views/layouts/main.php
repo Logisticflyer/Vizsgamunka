@@ -14,8 +14,9 @@ AppAsset::register($this);
 
 $assetDir = Yii::$app->assetManager->getPublishedUrl('@vendor/almasaeed2010/adminlte/dist');
 
-$publishedRes = Yii::$app->assetManager->publish('@vendor/hail812/yii2-adminlte3/src/web/js');
+/*$publishedRes = Yii::$app->assetManager->publish('@vendor/hail812/yii2-adminlte3/src/web/js');
 $this->registerJsFile($publishedRes[1].'/control_sidebar.js', ['depends' => '\hail812\adminlte3\assets\AdminLteAsset']);
+*/
 
 $currentController = Yii::$app->controller->id;
 $currentAction = Yii::$app->controller->action->id;
@@ -43,8 +44,11 @@ $isAuthPage = (($currentController === 'site' && in_array($currentAction, ['inde
     <?php endif; ?>
 
     <?= $this->render('content', ['content' => $content, 'assetDir' => $assetDir]) ?>
-    <?= $this->render('control-sidebar') ?>
-    <?= $this->render('footer') ?>
+    <?php if (!$isAuthPage): ?>
+        <?= $this->render('control-sidebar') ?>
+    <?php endif; ?>
+
+<?= $this->render('footer') ?>
 </div>
 
 <?php if ($isAuthPage): ?>
