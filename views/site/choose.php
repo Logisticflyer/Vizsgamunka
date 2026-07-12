@@ -1,5 +1,7 @@
 <?php
-
+$this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js', ['position' => \yii\web\View::POS_END]);
+$this->registerJsFile('@web/js/three-init.js', ['position' => \yii\web\View::POS_END, 'depends' => [\yii\web\YiiAsset::class]]);
+?>
 use yii\helpers\Url;
 
 $this->title = 'Szolgáltatások kiválasztása';
@@ -50,9 +52,9 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15
 
     <div class="row justify-content-center mt-5">
         <div class="col-12 col-lg-10">
-            <div class="3d-box-wrapper">
+            <div class="three-box-wrapper" style="background: #ffffff; padding: 30px; border-radius: 20px; border: 1px solid #e5e5e7; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);">
                 <h4 class="text-center mb-3 text-muted" style="font-size: 16px; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase;">Interaktív 3D Élmény</h4>
-                <div id="3d-container"></div>
+                <div id="3d-container" style="width: 100%; height: 350px; background-color: #1d1d1f; border-radius: 12px; display: block; position: relative;"></div>
             </div>
         </div>
     </div>

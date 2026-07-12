@@ -19,10 +19,12 @@ class AppAsset extends AssetBundle
     public $baseUrl = '@web';
     
     public $css = [
-        'css/site.css',
     ];
 
     public $js = [
+        // 1. Először betöltjük a Three.js alapot a felhőből
+        'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',
+        // 2. Másodikként a te saját kódodat, ami már építhet a fenti alapra
         'js/three-init.js', 
     ];
 
@@ -30,17 +32,12 @@ class AppAsset extends AssetBundle
         'yii\web\YiiAsset',
         'yii\bootstrap5\BootstrapAsset',
     ];
-
-    // Ez a Yii2 beépített trükkje: automatikusan egy egyedi verziószámot (?v=...) 
-    // pakol a JS és CSS fájlok mögé, így a böngésző SOHA nem fogja a régi, elmentett kódot futtatni!
-    public $publishOptions = [
-        'forceCopy' => true,
-    ];
     
     public function init()
     {
         parent::init();
-        // Bekapcsoljuk a verziókövetést a cache-elés ellen
+        // Automatikusan időbélyeget (?v=1234567) rak a fájl végére, 
+        // így ha módosítod a JS-t, a böngésző azonnal az újat tölti be!
         \Yii::$app->assetManager->appendTimestamp = true;
     }
 }
