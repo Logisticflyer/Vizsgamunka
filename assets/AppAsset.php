@@ -23,7 +23,6 @@ class AppAsset extends AssetBundle
     ];
 
     public $js = [
-        // Ide írd be a három pontot és a fájlodat:
         'js/three-init.js', 
     ];
 
@@ -31,4 +30,17 @@ class AppAsset extends AssetBundle
         'yii\web\YiiAsset',
         'yii\bootstrap5\BootstrapAsset',
     ];
+
+    // Ez a Yii2 beépített trükkje: automatikusan egy egyedi verziószámot (?v=...) 
+    // pakol a JS és CSS fájlok mögé, így a böngésző SOHA nem fogja a régi, elmentett kódot futtatni!
+    public $publishOptions = [
+        'forceCopy' => true,
+    ];
+    
+    public function init()
+    {
+        parent::init();
+        // Bekapcsoljuk a verziókövetést a cache-elés ellen
+        \Yii::$app->assetManager->appendTimestamp = true;
+    }
 }
