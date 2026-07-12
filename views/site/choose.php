@@ -1,11 +1,13 @@
 <?php
-$this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js', ['position' => \yii\web\View::POS_END]);
-$this->registerJsFile('@web/js/three-init.js', ['position' => \yii\web\View::POS_END, 'depends' => [\yii\web\YiiAsset::class]]);
-?>
+
 use yii\helpers\Url;
 
 $this->title = 'Szolgáltatások kiválasztása';
 $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css');
+
+// Three.js könyvtár és a saját szkriptünk fix betöltése a Yii2 segítségével az oldal végén
+$this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js', ['position' => \yii\web\View::POS_END]);
+$this->registerJsFile('@web/js/three-init.js', ['position' => \yii\web\View::POS_END, 'depends' => [\yii\web\YiiAsset::class]]);
 ?>
 
 <div class="choose-container">
@@ -171,23 +173,6 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15
     gap: 12px;
 }
 
-/* AZ ÚJ 3D DOBOZ STÍLUSA */
-.3d-box-wrapper {
-    background: #ffffff;
-    padding: 30px;
-    border-radius: 20px;
-    border: 1px solid #e5e5e7;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
-}
-
-#3d-container {
-    width: 100%;
-    height: 350px;
-    background-color: #000000; /* Fekete háttér a 3D térnek */
-    border-radius: 12px;
-    overflow: hidden;
-}
-
 @media (max-width: 768px) {
     .choose-container {
         padding: 60px 16px;
@@ -203,10 +188,6 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15
 
     .service-card {
         padding: 32px 24px;
-    }
-    
-    #3d-container {
-        height: 250px;
     }
 }
 </style>
