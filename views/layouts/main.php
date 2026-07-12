@@ -1,68 +1,77 @@
 <?php
 
-/* @var $this \yii\web\View */
-/* @var $content string */
+/** @var yii\web\View $this */
+/** @var string $content */
 
-use yii\helpers\Html;
 use app\assets\AppAsset;
+use app\widgets\Alert;
+use yii\bootstrap5\Breadcrumbs;
+use yii\bootstrap5\Html;
+use yii\bootstrap5\Nav;
+use yii\bootstrap5\NavBar;
 
-\hail812\adminlte3\assets\FontAwesomeAsset::register($this);
-\hail812\adminlte3\assets\AdminLteAsset::register($this);
-$this->registerCssFile('@web/css/site.css', ['depends' => [\hail812\adminlte3\assets\AdminLteAsset::class]]);
-$this->registerCssFile('https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback');
 AppAsset::register($this);
-
-$assetDir = Yii::$app->assetManager->getPublishedUrl('@vendor/almasaeed2010/adminlte/dist');
-
-/*$publishedRes = Yii::$app->assetManager->publish('@vendor/hail812/yii2-adminlte3/src/web/js');
-$this->registerJsFile($publishedRes[1].'/control_sidebar.js', ['depends' => '\hail812\adminlte3\assets\AdminLteAsset']);
-*/
-
-$currentController = Yii::$app->controller->id;
-$currentAction = Yii::$app->controller->action->id;
-
-$isAuthPage = (($currentController === 'site' && in_array($currentAction, ['index', 'signup', 'choose', 'rolunk', 'login', 'contact'])) || $currentController === 'ajanlatkeres');
 ?>
 <?php $this->beginPage() ?>
 <!DOCTYPE html>
-<html lang="<?= Yii::$app->language ?>">
+<html lang="<?= Yii::$app->language ?>" class="h-100">
 <head>
     <meta charset="<?= Yii::$app->charset ?>">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <?php $this->registerCsrfMetaTags() ?>
     <title><?= Html::encode($this->title) ?></title>
     <?php $this->head() ?>
 </head>
-<body class="hold-transition <?= $isAuthPage ? '' : 'sidebar-mini' ?>">
+<body class="d-flex flex-column h-100">
 <?php $this->beginBody() ?>
 
-<div class="wrapper">
-    <?= $this->render('navbar', ['assetDir' => $assetDir]) ?>
-    <?php if (!$isAuthPage): ?>
-        <?= $this->render('sidebar', ['assetDir' => $assetDir]) ?>
-    <?php endif; ?>
+<header id="header">
+    <?php
+    NavBar::begin([
+        'brandLabel' => Yii::$app->name,
+        'brandUrl' => Yii::$app->homeUrl,
+        'options' => ['class' => 'navbar navbar-expand-md navbar-dark bg-dark fixed-top']
+    ]);
+    echo Nav::widget([
+        'options' => ['class' => 'navbar-nav justify-content-end flex-grow-1 peer-2'],
+        'items' => [
+            ['label' => 'Főoldal', 'url' => ['/site/index']],
+            ['label' => 'Rólunk', 'url' => ['/site/about']],
+            ['label' => 'Contact', 'url' => ['/site/contact']],
+            Yii::$app->user->isGuest
+                ? ['label' => 'Login', 'url' => ['/site/login']]
+                : '<li class="nav-item">'
+                    . Html::beginForm(['/site/logout'])
+                    . Html::submitButton(
+                        'Logout (' . Yii::$app->user->identity->username . ')',
+                        ['class' => 'nav-link btn btn-link logout']
+                    )
+                    . Html::endForm()
+                    . '</li>'
+        ]
+    ]);
+    NavBar::end();
+    ?>
+</header>
 
-    <?= $this->render('content', ['content' => $content, 'assetDir' => $assetDir]) ?>
-    <?php if (!$isAuthPage): ?>
-        <?= $this->render('control-sidebar') ?>
-    <?php endif; ?>
+<main id="main" class="flex-shrink-0" role="main" style="padding-top: 60px;">
+    <div class="container-fluid p-0">
+        <?php if (!empty($this->params['breadcrumbs'])): ?>
+            <?= Breadcrumbs::widget(['links' => $this->params['breadcrumbs']]) ?>
+        <?php endif ?>
+        <?= Alert::widget() ?>
+        <?= $content ?>
+    </div>
+</main>
 
-    <?= $this->render('footer') ?>
-</div>
-
-<?php if ($isAuthPage): ?>
-<style>
-    .content-wrapper, body .content-wrapper {
-        margin-left: 0 !important;
-        padding-left: 0 !important;
-    }
-    .main-sidebar, .sidebar, aside.main-sidebar {
-        display: none !important;
-    }
-</style>
-<?php endif; ?>
-
+<footer id="footer" class="mt-auto py-3 bg-light">
+    <div class="container">
+        <div class="row text-muted">
+            <div class="col-md-6 text-center text-md-start">&copy; Saját Vizsgamunka <?= date('Y') ?></div>
+            <div class="col-md-6 text-center text-md-end"><?= Yii::powered() ?></div>
+        </div>
+    </div>
+</body
 <?php $this->endBody() ?>
 </body>
 </html>

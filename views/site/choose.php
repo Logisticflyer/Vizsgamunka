@@ -1,12 +1,11 @@
-<?php
+<<?php
 
 use yii\helpers\Url;
 
 $this->title = 'Szolgáltatások kiválasztása';
 $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css');
 
-// Three.js könyvtár és a saját szkriptünk fix betöltése a Yii2 segítségével az oldal végén
-$this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js', ['position' => \yii\web\View::POS_END]);
+// CSAK a te saját, megerősített scriptedet töltjük be
 $this->registerJsFile('@web/js/three-init.js', ['position' => \yii\web\View::POS_END, 'depends' => [\yii\web\YiiAsset::class]]);
 ?>
 
