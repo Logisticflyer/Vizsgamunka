@@ -1,253 +1,128 @@
 <?php
 
-use yii\helpers\Url;
-use yii\widgets\ActiveForm;
+/** @var yii\web\View $this */
+/** @var app\models\LoginForm $model */
+/** @var app\models\SignupForm $signupModel */
 
-$this->title = 'Főoldal';
+use yii\bootstrap5\Html;
+use yii\bootstrap5\ActiveForm;
 
-if (!isset($signupModel)) {
-    $signupModel = new \app\models\SignupForm();
-}
+$this->title = 'Saját Vizsgamunka - Belépés';
+
+// Megnézzük, hogy a regisztrációs modellben van-e validációs hiba
+$hasSignupError = $signupModel->hasErrors();
 ?>
 
-<div class="landing-container" style="max-width: 1200px; margin: 0 auto; padding: 40px 20px;">
-    <div class="hero-section">
-        <h1>Digitális Precizitás & Automatizáció</h1>
-        <p>Üdvözlünk a platformon. Optimalizáld a munkafolyamataidat fejlett AI asszisztensekkel vagy egyedi 3D tervezéssel egyetlen felületen.</p>
-
-        <div class="hero-buttons">
-            <a href="<?= Url::to(['/site/choose']) ?>" class="btn-main">Szolgáltatások felfedezése</a>
-            <a href="#ajanlat-zone" class="btn-secondary" style="color: #0071e3; font-weight: 500; text-decoration: none;">Ajánlatkérés</a>
-            <a href="#auth-zone" class="btn-secondary">Csatlakozás most</a>
-        </div>
-    </div>
-
-    <div class="partner-strip">
-        <span>Támogatott technológiák:</span>
-        <div class="partner-logos">
-            <i class="fab fa-google"></i> Google Cloud
-            <i class="fab fa-aws"></i> AWS
-            <i class="fas fa-brain"></i> OpenAI API
-        </div>
-    </div>
-
-    <div id="auth-zone" class="auth-section">
-        <div class="auth-card">
-            <div class="auth-tabs">
-                <button id="tab-login" class="auth-tab active" type="button" onclick="switchAuth('login')">Bejelentkezés</button>
-                <button id="tab-register" class="auth-tab" type="button" onclick="switchAuth('register')">Regisztráció</button>
+<div class="hero-container d-flex align-items-center">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            
+            <div class="col-lg-6 text-center text-lg-start pe-lg-5">
+                <h1 class="hero-title">Digitális Precizitás <br><span class="text-primary">& Automatizáció</span></h1>
+                <p class="hero-subtitle mt-4">
+                    Üdvözlünk a platformon. Optimalizáld a munkafolyamataidat fejlett AI asszisztensekkel vagy egyedi 3D tervezéssel egyetlen, letisztult felületen.
+                </p>
+                
+                <div class="hero-graphic mt-5">
+                    <svg viewBox="0 0 300 120" class="w-100" style="max-width: 320px;">
+                        <defs>
+                            <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" style="stop-color:#0071e3;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#5e5ce6;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <path d="M0,60 Q75,10 150,60 T300,60" stroke="url(#lineGrad)" stroke-width="8" fill="none" stroke-linecap="round"/>
+                        <circle cx="0" cy="60" r="8" fill="#0071e3"/>
+                        <circle cx="150" cy="60" r="8" fill="#5e5ce6"/>
+                        <circle cx="300" cy="60" r="8" fill="#0071e3"/>
+                    </svg>
+                    <p class="text-muted mt-3 fw-light small" style="letter-spacing: 0.5px;">ADATVEZÉRELT AUTOMATIZÁCIÓS FOLYAMAT</p>
+                </div>
             </div>
 
-            <div id="form-login" class="auth-form-wrapper">
-                <?php $formLogin = ActiveForm::begin([
-                    'id' => 'login-form',
-                    'action' => ['site/index'],
-                    'options' => ['class' => 'minimal-form', 'method' => 'post'],
-                    'fieldConfig' => [
-                        'template' => "{input}\n{error}",
-                    ],
-                ]); ?>
+            <div class="col-lg-6">
+                <div class="auth-card shadow-sm">
+                    
+                    <?php if (Yii::$app->session->hasFlash('error')): ?>
+                        <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center" role="alert" style="border-radius: 12px; font-size: 0.9rem; background-color: #fff0f0; color: #ff3b30; border: 1px solid #ffcaca; padding: 16px; margin-bottom: 20px;">
+                            <div class="flex-grow-1">
+                                <strong>Hoppá!</strong> <?= Yii::$app->session->getFlash('error') ?>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="font-size: 0.8rem;"></button>
+                        </div>
+                    <?php endif; ?>
 
-                    <div class="form-group" style="margin-bottom: 20px;">
-                        <label style="display: block; font-weight: 600; text-transform: uppercase; font-size: 12px; color: #86868b; margin-bottom: 8px; text-align: left;">Felhasználónév</label>
-                        <?= $formLogin->field($model, 'username')->textInput([
-                            'class' => 'form-control',
-                            'placeholder' => 'Felhasználónév vagy email',
-                            'style' => 'width: 100%; padding: 14px; border: 1px solid #d2d2d7; border-radius: 12px; font-size: 16px; background-color: #f5f5f7;'
-                        ]) ?>
+                    <?php if (Yii::$app->session->hasFlash('success')): ?>
+                        <div class="alert alert-success alert-dismissible fade show d-flex align-items-center" role="alert" style="border-radius: 12px; font-size: 0.9rem; background-color: #f0fff4; color: #28a745; border: 1px solid #c3e6cb; padding: 16px; margin-bottom: 20px;">
+                            <div class="flex-grow-1">
+                                <strong>Szuper!</strong> <?= Yii::$app->session->getFlash('success') ?>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="font-size: 0.8rem;"></button>
+                        </div>
+                    <?php endif; ?>
+
+                    <ul class="nav nav-pills nav-fill mb-4 custom-tabs" id="authTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link <?= $hasSignupError ? '' : 'active' ?> fw-bold" id="login-tab" data-bs-toggle="tab" data-bs-target="#login-pane" type="button" role="tab">Bejelentkezés</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link <?= $hasSignupError ? 'active' : '' ?> fw-bold" id="signup-tab" data-bs-toggle="tab" data-bs-target="#signup-pane" type="button" role="tab">Regisztráció</button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="authTabContent">
+                        <div class="tab-pane fade <?= $hasSignupError ? '' : 'show active' ?>" id="login-pane" role="tabpanel">
+                            <?php $form = ActiveForm::begin(['id' => 'login-form', 'class' => 'modern-form']); ?>
+                                <?= $form->field($model, 'username')->textInput(['autofocus' => true, 'class' => 'form-control custom-input', 'placeholder' => 'Felhasználónév'])->label('Felhasználónév') ?>
+                                <?= $form->field($model, 'password')->passwordInput(['class' => 'form-control custom-input', 'placeholder' => '••••••••'])->label('Jelszó') ?>
+                                <?= $form->field($model, 'rememberMe')->checkbox(['class' => 'form-check-input'])->label('Emlékezz rám') ?>
+                                <div class="text-end mb-3 mt-2">
+                                    <a href="<?= \yii\helpers\Url::to(['site/request-password-reset']) ?>" class="text-decoration-none fw-semibold" style="color: #0071e3; font-size: 0.9rem;">
+                                        Elfelejtetted a jelszavad?
+                                    </a>
+                                </div>
+                                <div class="d-grid mt-4">
+                                    <?= Html::submitButton('Belépés <i class="fas fa-arrow-right ms-2"></i>', ['class' => 'btn btn-primary btn-lg custom-btn', 'name' => 'login-button', 'value' => 'login-button']) ?>
+                                </div>
+                            <?php ActiveForm::end(); ?>
+                        </div>
+
+                        <div class="tab-pane fade <?= $hasSignupError ? 'show active' : '' ?>" id="signup-pane" role="tabpanel">
+                            <?php $form = ActiveForm::begin([
+                                'id' => 'signup-form', 
+                                'class' => 'modern-form',
+                                'fieldConfig' => [
+                                    'template' => "{label}\n{input}\n{error}",
+                                ]
+                            ]); ?>
+                                <?= $form->field($signupModel, 'username')->textInput(['class' => 'form-control custom-input', 'placeholder' => 'Válassz egy nevet'])->label('Felhasználónév') ?>
+                                <?= $form->field($signupModel, 'email')->input('email', ['class' => 'form-control custom-input', 'placeholder' => 'pelda@email.com'])->label('Email cím') ?>
+                                <?= $form->field($signupModel, 'password')->passwordInput(['class' => 'form-control custom-input', 'placeholder' => 'Legalább 8 karakter'])->label('Jelszó') ?>
+                                <?= $form->field($signupModel, 'password_repeat')->passwordInput(['class' => 'form-control custom-input', 'placeholder' => 'Ismételd meg a jelszót'])->label('Jelszó megerősítése') ?>
+                                <div class="d-grid mt-5">
+                                    <?= Html::submitButton('Fiók Létrehozása', ['class' => 'btn btn-dark btn-lg custom-btn', 'name' => 'signup-button', 'value' => 'signup-button']) ?>
+                                </div>
+                            <?php ActiveForm::end(); ?>
+                        </div>
                     </div>
-
-                    <div class="form-group" style="margin-bottom: 25px;">
-                        <label style="display: block; font-weight: 600; text-transform: uppercase; font-size: 12px; color: #86868b; margin-bottom: 8px; text-align: left;">Jelszó</label>
-                        <?= $formLogin->field($model, 'password')->passwordInput([
-                            'class' => 'form-control',
-                            'placeholder' => '••••••••',
-                            'style' => 'width: 100%; padding: 14px; border: 1px solid #d2d2d7; border-radius: 12px; font-size: 16px; background-color: #f5f5f7;'
-                        ]) ?>
-                    </div>
-
-                    <div class="form-group checkbox-wrapper" style="margin-bottom: 20px; font-size: 14px; color: #86868b; text-align: left; display: flex; align-items: center; gap: 8px;">
-                        <?= $formLogin->field($model, 'rememberMe')->checkbox([
-                            'template' => "<div class='custom-control custom-checkbox'>{input} {label}</div>\n{error}",
-                        ])->label('Emlékezz rám') ?>
-                    </div>
-
-                    <button type="submit" class="btn-auth" name="login-button">Belépés</button>
-
-                    <div class="oauth-divider"><span>vagy lépj be amivel kényelmesebb</span></div>
-
-                    <a href="#" class="btn-google">
-                        <i class="fab fa-google"></i> Belépés Google fiókkal
-                    </a>
-
-                <?php ActiveForm::end(); ?>
+                </div>
             </div>
-
-            <div id="form-register" class="auth-form-wrapper" style="display: none;">
-                <?php $formSignup = ActiveForm::begin([
-                    'id' => 'signup-form',
-                    'action' => ['site/signup'],
-                    'options' => ['class' => 'minimal-form', 'method' => 'post'],
-                    'fieldConfig' => [
-                        'template' => "{input}\n{error}",
-                    ],
-                ]); ?>
-
-                    <p style="color: #86868b; text-align: center; margin-bottom: 20px;">Hozd létre a fiókodat a folytatáshoz.</p>
-
-                    <div class="form-group" style="margin-bottom: 20px;">
-                        <label style="display: block; font-weight: 600; text-transform: uppercase; font-size: 12px; color: #86868b; margin-bottom: 8px; text-align: left;">Felhasználónév</label>
-                        <?= $formSignup->field($signupModel, 'username')->textInput([
-                            'class' => 'form-control',
-                            'placeholder' => 'Pl. ujfelhasznalo',
-                            'style' => 'width: 100%; padding: 14px; border: 1px solid #d2d2d7; border-radius: 12px; font-size: 16px; background-color: #f5f5f7;'
-                        ]) ?>
-                    </div>
-
-                    <div class="form-group" style="margin-bottom: 20px;">
-                        <label style="display: block; font-weight: 600; text-transform: uppercase; font-size: 12px; color: #86868b; margin-bottom: 8px; text-align: left;">E-mail cím</label>
-                        <?= $formSignup->field($signupModel, 'email')->input('email', [
-                            'class' => 'form-control',
-                            'placeholder' => 'pelda@domain.com',
-                            'style' => 'width: 100%; padding: 14px; border: 1px solid #d2d2d7; border-radius: 12px; font-size: 16px; background-color: #f5f5f7;'
-                        ]) ?>
-                    </div>
-
-                    <div class="form-group" style="margin-bottom: 25px;">
-                        <label style="display: block; font-weight: 600; text-transform: uppercase; font-size: 12px; color: #86868b; margin-bottom: 8px; text-align: left;">Jelszó</label>
-                        <?= $formSignup->field($signupModel, 'password')->passwordInput([
-                            'class' => 'form-control',
-                            'placeholder' => '••••••••',
-                            'style' => 'width: 100%; padding: 14px; border: 1px solid #d2d2d7; border-radius: 12px; font-size: 16px; background-color: #f5f5f7;'
-                        ]) ?>
-                    </div>
-
-                    <button type="submit" class="btn-auth" name="signup-button">Regisztráció</button>
-
-                <?php ActiveForm::end(); ?>
-            </div>
-        </div>
-    </div>
-
-    <div id="ajanlat-zone" class="ajanlat-section">
-        <div class="ajanlat-card">
-            <h2 class="ajanlat-title"><i class="fas fa-paper-plane text-primary mr-2"></i> Kérjen Egyedi Ajánlatot</h2>
-            <p class="ajanlat-subtitle">Küldje el elképzeléseit aszinkron módon, és munkatársunk azonnal feldolgozza azt.</p>
-
-            <div id="form-alert" class="custom-alert d-none"></div>
-
-            <form id="ajax-ajanlatkeres-form" class="minimal-form" action="javascript:void(0);" method="post">
-                <div class="form-group">
-                    <label class="form-label">Az Ön Neve</label>
-                    <input type="text" name="nev" class="form-input" placeholder="Pl.: Teszt Máté" required>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">E-mail Címe</label>
-                    <input type="email" name="email" class="form-input" placeholder="minta@email.com" required>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Projekt Tárgya</label>
-                    <input type="text" name="targy" class="form-input" placeholder="Pl.: AI ügyfélszolgálati automatizáció" required>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Projekt Típusa</label>
-                    <select name="tipus" class="form-input" style="height: 52px; appearance: none; -webkit-appearance: none; background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2386868b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 16px top 50%; background-size: 12px auto;" required>
-                        <option value="" disabled selected>Válasszon szolgáltatást...</option>
-                        <option value="ai">AI Automatizáció Projekt</option>
-                        <option value="3d">3D Tervezés Projekt</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Projekt Rövid Leírása</label>
-                    <textarea name="leiras" rows="4" class="form-input" style="height: auto; resize: none;" placeholder="Írja le röviden a projekt elképzeléseit és céljait..." required></textarea>
-                </div>
-
-                <button type="submit" id="submit-btn" class="btn-auth" style="background: #0071e3;">
-                    <i class="fas fa-paper-plane mr-1"></i> Ajánlatkérés Elküldése
-                </button>
-            </form>
         </div>
     </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-function switchAuth(type) {
-    const loginForm = document.getElementById('form-login');
-    const registerForm = document.getElementById('form-register');
-    const loginTab = document.getElementById('tab-login');
-    const registerTab = document.getElementById('tab-register');
-
-    if (type === 'login') {
-        loginForm.style.display = 'block';
-        registerForm.style.display = 'none';
-        loginTab.classList.add('active');
-        registerTab.classList.remove('active');
-    } else {
-        loginForm.style.display = 'none';
-        registerForm.style.display = 'block';
-        loginTab.classList.remove('active');
-        registerTab.classList.add('active');
-    }
-}
-
-$(document).ready(function () {
-    const urlParams = new URLSearchParams(window.location.search);
-
-    if (urlParams.has('type')) {
-        let projectType = urlParams.get('type');
-        let $selectField = $('select[name="tipus"]');
-
-        if ($selectField.length > 0) {
-            $selectField.val(projectType).trigger('change');
-        }
-
-        setTimeout(function () {
-            let $target = $("#ajanlat-zone");
-            if ($target.length > 0) {
-                $('html, body').animate({
-                    scrollTop: $target.offset().top - 40
-                }, 800);
-            }
-        }, 200);
-    }
-
-    $('#ajax-ajanlatkeres-form').on('submit', function (e) {
-        e.preventDefault();
-
-        let $form = $(this);
-        let $submitBtn = $('#submit-btn');
-        let $alert = $('#form-alert');
-
-        $submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Feldolgozás...');
-        $alert.addClass('d-none').removeClass('alert-error alert-success').text('');
-
-        $.ajax({
-            url: '<?= Url::to(['ajanlatkeres/bekuldes']) ?>',
-            type: 'POST',
-            data: $form.serialize(),
-            dataType: 'json',
-            success: function (response) {
-                $alert.removeClass('d-none alert-error alert-success');
-
-                if (response.success) {
-                    $alert.addClass('alert-success').text(response.message);
-                    $form[0].reset();
-                } else {
-                    $alert.addClass('alert-error').text(response.message || 'A mentés sikertelen.');
-                }
-            },
-            error: function () {
-                $alert.removeClass('d-none alert-success').addClass('alert-error').text('Szerver kommunikációs hiba történt!');
-            },
-            complete: function () {
-                $submitBtn.prop('disabled', false).html('<i class="fas fa-paper-plane mr-1"></i> Ajánlatkérés Elküldése');
-            }
-        });
-    });
-});
-</script>
+<style>
+.hero-container { min-height: calc(100vh - 140px); background-color: #f5f5f7; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 40px 0; }
+.hero-title { font-size: 3.5rem; font-weight: 800; letter-spacing: -1.5px; color: #1d1d1f; line-height: 1.1; }
+.text-primary { color: #0071e3 !important; }
+.hero-subtitle { font-size: 1.25rem; color: #86868b; line-height: 1.6; max-width: 500px; }
+.hero-graphic { display: flex; flex-direction: column; align-items: flex-start; margin-top: 2rem; }
+.auth-card { background: #ffffff; border-radius: 24px; padding: 40px; border: 1px solid #e5e5e7; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.04) !important; }
+.custom-tabs { background-color: #f5f5f7; border-radius: 12px; padding: 6px; }
+.custom-tabs .nav-link { border-radius: 8px; color: #86868b; border: none; transition: 0.3s; }
+.custom-tabs .nav-link.active { background-color: #ffffff; color: #1d1d1f; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+.custom-input { border-radius: 12px; border: 1px solid #d2d2d7; padding: 14px 16px; margin-bottom: 0.5rem; }
+.custom-btn { border-radius: 12px; padding: 14px; font-weight: 600; background-color: #0071e3; border: none; }
+.invalid-feedback { display: block !important; color: #ff3b30 !important; font-size: 0.8rem !important; margin-bottom: 1rem !important; margin-top: -0.5rem !important; }
+@media (max-width: 991px) { .hero-title { font-size: 2.5rem; } .hero-graphic { align-items: center; margin-bottom: 30px; } }
+</style>

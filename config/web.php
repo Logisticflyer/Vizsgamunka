@@ -20,8 +20,9 @@ $config = [
             'class' => 'yii\caching\FileCache',
         ],
         'user' => [
-            'identityClass' => 'app\models\User', // <- ELLENŐRIZD: Ez pontosan így van írva?
+            'identityClass' => 'app\models\User',
             'enableAutoLogin' => true,
+            'loginUrl' => ['site/index'], // EZ A LÉNYEG: Ide dobja a vendégeket!
         ],
         'authManager' => [
             'class' => 'yii\rbac\DbManager',
@@ -32,9 +33,15 @@ $config = [
         'mailer' => [
             'class' => \yii\symfonymailer\Mailer::class,
             'viewPath' => '@app/mail',
-            // send all mails to a file by default.
-            'useFileTransport' => true,
-        ],
+            'useFileTransport' => false, // FONTOS: Ez most false, azaz küldeni fog!
+            'transport' => [
+                'scheme' => 'smtps',
+                'host' => 'smtp.gmail.com', // Vagy a szolgáltatód SMTP címe
+                'username' => 'sajat-email-címed@gmail.com',
+                'password' => 'alkalmazas-jelszo', // Nem a rendes jelszavad, hanem Google "Alkalmazásjelszó"!
+                'port' => 465,
+            ],
+],
         'log' => [
             'traceLevel' => YII_DEBUG ? 3 : 0,
             'targets' => [

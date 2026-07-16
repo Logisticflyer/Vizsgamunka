@@ -19,22 +19,11 @@ class SignupForm extends Model
     public function rules()
     {
         return [
-            // Minden mező kitöltése kötelező
-            [['username', 'email', 'password', 'password_repeat'], 'required', 'message' => '{attribute} kitöltése kötelező.'],
-            
-            // A felhasználónévnek egyedinek kell lennie a 'user' táblában
-            ['username', 'unique', 'targetClass' => '\app\models\User', 'message' => 'Ez a felhasználónév már foglalt.'],
-            ['username', 'string', 'min' => 2, 'max' => 50],
-            
-            // Az e-mail formátumának ellenőrzése és egyedisége
-            ['email', 'email', 'message' => 'Nem érvényes e-mail cím.'],
+            [['username', 'email', 'password'], 'required'],
+            ['email', 'email'],
             ['email', 'unique', 'targetClass' => '\app\models\User', 'message' => 'Ezzel az e-mail címmel már regisztráltak.'],
-            
-            // Jelszó minimum hossza
-            ['password', 'string', 'min' => 4],
-            
-            // Megnézzük, hogy a 'Jelszó megerősítése' pontosan megegyezik-e a jelszóval
-            ['password_repeat', 'compare', 'compareAttribute' => 'password', 'message' => 'A két jelszó nem egyezik meg.'],
+            ['password', 'string', 'min' => 6],
+            ['password_repeat', 'compare', 'compareAttribute' => 'password', 'message' => 'A jelszavak nem egyeznek.'],
         ];
     }
 
@@ -54,39 +43,33 @@ class SignupForm extends Model
     /**
      * A felhasználó tényleges mentése az adatbázisba
      */
-    public function signup()
+   public function signup()
     {
+        // 1. Validáció: Ha a mezők nem érvényesek, a kód itt VÉGLEG megáll.
         if (!$this->validate()) {
-            Yii::error($this->getErrors(), 'signup_debug');
-            return null;
+            return false; 
         }
 
+        // 2. HA idáig eljutottunk, a validáció biztosan sikeres volt.
         $db = Yii::$app->db;
 
         try {
+            // Biztonságos adatbázis beszúrás
             $success = $db->createCommand()->insert('user', [
                 'username'        => $this->username,
                 'email'           => $this->email,
                 'password_hash'   => Yii::$app->security->generatePasswordHash($this->password),
                 'auth_key'        => Yii::$app->security->generateRandomString(),
-                'auth_key_expire' => time() + 3600 * 24 * 30,
                 'status'          => 10,
                 'created_at'      => time(),
                 'updated_at'      => time(),
             ])->execute();
 
-            Yii::error(['insert_success' => $success], 'signup_debug'); // ← ÚJ
+            return $success > 0;
+
         } catch (\Exception $e) {
-            Yii::error(['insert_exception' => $e->getMessage()], 'signup_debug'); // ← ÚJ
-            return null;
+            // Ha adatbázis hiba történik
+            return false;
         }
-
-        if ($success) {
-            $user = User::findByUsername($this->username);
-            Yii::error(['found_user' => $user ? $user->id : 'NULL'], 'signup_debug'); // ← ÚJ
-            return $user;
-        }
-
-        return null;
     }
 }
