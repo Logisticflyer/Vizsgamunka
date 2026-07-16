@@ -33,15 +33,16 @@ $config = [
         'mailer' => [
             'class' => \yii\symfonymailer\Mailer::class,
             'viewPath' => '@app/mail',
-            'useFileTransport' => false, // FONTOS: Ez most false, azaz küldeni fog!
+            // FONTOS: Mostantól ez FALSE, tehát a rendszer ténylegesen elküldi a levelet!
+            'useFileTransport' => false, 
             'transport' => [
                 'scheme' => 'smtps',
-                'host' => 'smtp.gmail.com', // Vagy a szolgáltatód SMTP címe
-                'username' => 'sajat-email-címed@gmail.com',
-                'password' => 'alkalmazas-jelszo', // Nem a rendes jelszavad, hanem Google "Alkalmazásjelszó"!
+                'host' => 'smtp.gmail.com',
+                'username' => 'mesznermat696@gmail.com', // Írd ide a saját Gmail címedet
+                'password' => 'atsdlioebwpmvvkw', // Szóközök nélkül!
                 'port' => 465,
             ],
-],
+        ],
         'log' => [
             'traceLevel' => YII_DEBUG ? 3 : 0,
             'targets' => [

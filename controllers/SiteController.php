@@ -202,7 +202,7 @@ class SiteController extends Controller
                 Yii::$app->session->setFlash('success', 'Nézd meg az e-mail fiókodat! Elküldtük a további lépéseket.');
                 return $this->redirect(['index']); // Visszadobjuk a főoldalra
             } else {
-                Yii::$app->session->setFlash('error', 'Sajnos hiba történt az e-mail küldése közben.');
+                YYii::$app->session->setFlash('success', 'Ha a megadott e-mail cím szerepel a rendszerünkben, elküldtük a további lépéseket.');
             }
         }
 

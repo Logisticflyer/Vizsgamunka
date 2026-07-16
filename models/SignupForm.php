@@ -21,6 +21,7 @@ class SignupForm extends Model
         return [
             [['username', 'email', 'password'], 'required'],
             ['email', 'email'],
+            ['email', 'email', 'message' => 'Kérlek, egy érvényes e-mail formátumot adj meg (pl. pelda@gmail.com)!'],
             ['email', 'unique', 'targetClass' => '\app\models\User', 'message' => 'Ezzel az e-mail címmel már regisztráltak.'],
             ['password', 'string', 'min' => 6],
             ['password_repeat', 'compare', 'compareAttribute' => 'password', 'message' => 'A jelszavak nem egyeznek.'],
