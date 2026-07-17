@@ -16,54 +16,65 @@ class PasswordResetRequestForm extends Model
             ['email', 'trim'],
             ['email', 'required', 'message' => 'Az e-mail cím megadása kötelező.'],
             ['email', 'email', 'message' => 'Érvénytelen e-mail cím formátum.'],
-            // BIZTONSÁG: Direkt kivettük az 'exist' validátort, hogy ne szivárogtassunk ki információt arról, létezik-e a user!
         ];
     }
 
     public function sendEmail()
     {
+        // 1. BIZTONSÁG: Rate Limiting (Spam és Bot védelem IP cím alapján)
+        $ip = Yii::$app->request->userIP;
+        $cacheKey = 'password_reset_limit_' . $ip;
+        $attempts = Yii::$app->cache->get($cacheKey);
+
+        if ($attempts !== false && $attempts >= 3) {
+            // Ha már 3-szor próbálkozott, visszadobjuk a formhoz egy hibaüzenettel
+            $this->addError('email', 'Túl sok próbálkozás! Biztonsági okokból kérlek, várj 5 percet.');
+            return false;
+        }
+
+        // Növeljük a próbálkozások számát a gyorsítótárban (300 másodperc = 5 perc lejárattal)
+        Yii::$app->cache->set($cacheKey, ($attempts !== false ? $attempts + 1 : 1), 300);
+
+
+        // 2. BIZTONSÁG: E-mail Enumeration védelem (Felsorolásos támadás ellen)
         $user = User::findOne(['email' => $this->email]);
 
-        // BIZTONSÁG: Ha nem létezik a user, akkor is "sikert" (true) színlelünk a támadók megtévesztésére, de nem küldünk semmit.
         if (!$user) {
+            // Nem áruljuk el a támadónak, hogy nincs ilyen e-mail, "sikert" színlelünk
             return true; 
         }
 
-        // BIZTONSÁG: Tranzakció indítása (Minden vagy semmi elv)
+
+        // 3. BIZTONSÁG: Adatbázis Tranzakció (Atomicitás - Minden vagy semmi elv)
         $transaction = Yii::$app->db->beginTransaction();
         
         try {
-            // Új token generálása
             $user->password_reset_token = Yii::$app->security->generateRandomString() . '_' . time();
 
-            // Ha a mentés sikertelen, visszavonjuk a tranzakciót
             if (!$user->save(false)) {
                 $transaction->rollBack();
                 return false;
             }
 
-            // Link generálása
             $resetLink = Yii::$app->urlManager->createAbsoluteUrl(['site/reset-password', 'token' => $user->password_reset_token]);
 
-            // E-mail küldés megkísérlése
             $mailSent = Yii::$app->mailer->compose(['html' => 'passwordResetToken-html'], ['resetLink' => $resetLink])
                 ->setFrom(['noreply@vizsgamunka.hu' => 'Vizsgamunka Rendszer'])
                 ->setTo($this->email)
-                ->setSubject('Jelszó visszaállítása - Bizsgamunka')
+                ->setSubject('Jelszó visszaállítása - Vizsgamunka')
                 ->send();
 
-            // Ha az e-mail elment, véglegesítjük az adatbázis módosítást
             if ($mailSent) {
+                // Csak akkor mentjük el véglegesen a tokent, ha az e-mail sikeresen el is ment
                 $transaction->commit();
                 return true;
             } else {
-                // Ha hiba volt a küldésnél, töröljük a generált tokent (visszavonás)
                 $transaction->rollBack();
                 return false;
             }
             
         } catch (\Exception $e) {
-            // Váratlan szerverhiba esetén is védve vagyunk
+            // Váratlan szerverhiba esetén mindent visszavonunk
             $transaction->rollBack();
             return false;
         }
