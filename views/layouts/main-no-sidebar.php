@@ -50,7 +50,7 @@ $assetDir = Yii::$app->assetManager->getPublishedUrl('@vendor/almasaeed2010/admi
     }
 
     .content-wrapper, 
-    body.sidebar-mini .content-wrapper, 
+    body.sidebar-mini .content-wrapper,
     body.sidebar-mini.sidebar-collapse .content-wrapper,
     .main-footer,
     .main-header {

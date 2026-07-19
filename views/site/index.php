@@ -126,3 +126,29 @@ $hasSignupError = $signupModel->hasErrors();
 .invalid-feedback { display: block !important; color: #ff3b30 !important; font-size: 0.8rem !important; margin-bottom: 1rem !important; margin-top: -0.5rem !important; }
 @media (max-width: 991px) { .hero-title { font-size: 2.5rem; } .hero-graphic { align-items: center; margin-bottom: 30px; } }
 </style>
+
+<?php
+$script = <<< JS
+document.addEventListener("DOMContentLoaded", function() {
+    let hash = window.location.hash; // Megnézzük a link végét (pl. #register)
+    
+    if (hash) {
+        // Megkeressük a Bootstrap tab gombot, ami a hash-re mutat
+        let tabBtn = document.querySelector('button[data-bs-target="' + hash + '"]');
+        
+        // Ha az azonosítók nem data-bs-target alapján vannak, hanem ID alapján (pl. id="register-tab")
+        if (!tabBtn) {
+            tabBtn = document.querySelector(hash + '-tab');
+        }
+
+        // Ha megtaláltuk a megfelelő gombot, kattintás nélkül "aktiváljuk"
+        if (tabBtn) {
+            let tab = new bootstrap.Tab(tabBtn);
+            tab.show();
+        }
+    }
+});
+JS;
+
+$this->registerJs($script);
+?>

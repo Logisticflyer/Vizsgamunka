@@ -4,10 +4,10 @@ namespace app\models;
 
 use Yii;
 use yii\base\Model;
+use app\models\User;
 
 class SignupForm extends Model
 {
-    // Megadjuk azokat a mezőket, amiket a regisztrációs űrlapon kérünk be
     public $username;
     public $email;
     public $password;
@@ -19,17 +19,20 @@ class SignupForm extends Model
     public function rules()
     {
         return [
-            [['username', 'email', 'password'], 'required'],
-            ['email', 'email'],
-            ['email', 'email', 'message' => 'Kérlek, egy érvényes e-mail formátumot adj meg (pl. pelda@gmail.com)!'],
+            [['username', 'email', 'password', 'password_repeat'], 'required', 'message' => 'Ezt a mezőt kötelező kitölteni.'],
+            ['email', 'email', 'message' => 'Kérlek, egy érvényes e-mail formátumot adj meg!'],
+            
+            // Egyediség ellenőrzése (hogy ne legyen adatbázis ütközés)
             ['email', 'unique', 'targetClass' => '\app\models\User', 'message' => 'Ezzel az e-mail címmel már regisztráltak.'],
-            ['password', 'string', 'min' => 6],
+            ['username', 'unique', 'targetClass' => '\app\models\User', 'message' => 'Ez a felhasználónév már foglalt.'],
+            
+            ['password', 'string', 'min' => 6, 'message' => 'A jelszónak legalább 6 karakterből kell állnia.'],
             ['password_repeat', 'compare', 'compareAttribute' => 'password', 'message' => 'A jelszavak nem egyeznek.'],
         ];
     }
 
     /**
-     * Mezők emberi feliratai (ezek jelennek meg a beviteli mezők felett)
+     * Mezők emberi feliratai
      */
     public function attributeLabels()
     {
@@ -42,35 +45,38 @@ class SignupForm extends Model
     }
 
     /**
-     * A felhasználó tényleges mentése az adatbázisba
+     * A felhasználó tényleges mentése az adatbázisba az ActiveRecord használatával
      */
-   public function signup()
+    public function signup()
     {
-        // 1. Validáció: Ha a mezők nem érvényesek, a kód itt VÉGLEG megáll.
+        // 1. Validáció
         if (!$this->validate()) {
-            return false; 
+            return null; 
         }
 
-        // 2. HA idáig eljutottunk, a validáció biztosan sikeres volt.
-        $db = Yii::$app->db;
+        // 2. Új felhasználó objektum létrehozása
+        $user = new User();
+        $user->username = $this->username;
+        $user->email = $this->email;
+        
+        // 3. Biztonsági adatok generálása a User modell metódusaival
+        $user->setPassword($this->password);
+        $user->generateAuthKey();
+        $user->status = User::STATUS_ACTIVE; // Ez alapértelmezetten a 10-es érték
+        
+        // 4. Időbélyegek és kötelező adatok kitöltése
+        $currentTime = time();
+        $user->created_at = $currentTime;
+        $user->updated_at = $currentTime;
+        
+        // FONTOS: Ez hiányzott eddig, emiatt omlott össze az adatbázisod! (30 napos lejárat)
+        $user->auth_key_expire = $currentTime + (30 * 24 * 60 * 60); 
 
-        try {
-            // Biztonságos adatbázis beszúrás
-            $success = $db->createCommand()->insert('user', [
-                'username'        => $this->username,
-                'email'           => $this->email,
-                'password_hash'   => Yii::$app->security->generatePasswordHash($this->password),
-                'auth_key'        => Yii::$app->security->generateRandomString(),
-                'status'          => 10,
-                'created_at'      => time(),
-                'updated_at'      => time(),
-            ])->execute();
-
-            return $success > 0;
-
-        } catch (\Exception $e) {
-            // Ha adatbázis hiba történik
-            return false;
+        // 5. Mentés az adatbázisba
+        if ($user->save(false)) { // A false kikapcsolja a dupla validációt, mivel feljebb már megtettük
+            return $user; // SIKER: Visszaadjuk az objektumot, hogy a rendszer automatikusan be tudjon léptetni
         }
+
+        return null; // Ha valamiért mégsem sikerült menteni
     }
 }

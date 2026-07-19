@@ -109,6 +109,27 @@ class SiteController extends Controller
         ]);
     }
 
+    public function actionProfile()
+    {
+
+        if (Yii::$app->user->isGuest) {
+            return $this->goHome();
+        }
+
+        $user = Yii::$app->user->identity;
+        $model = new \app\models\UpdateProfileForm($user);
+
+        if ($model->load(Yii::$app->request->post()) && $model->updateProfile()) {
+            Yii::$app->session->setFlash('success', 'A profiladataid sikeresen frissítve lettek!');
+            return $this->refresh();
+        }
+
+        return $this->render('profile', [
+            'model' => $model,
+            'user' => $user,
+        ]);
+    }
+
     public function actionRolunk()
     {
         $this->layout = 'main-no-sidebar';
