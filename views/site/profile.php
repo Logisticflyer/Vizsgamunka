@@ -7,53 +7,55 @@ use yii\bootstrap5\ActiveForm;
 /** @var app\models\UpdateProfileForm $model */
 
 $this->title = 'Profilom';
-$this->params['breadcrumbs'][] = $this->title;
 ?>
-<div class="site-profile container mt-4">
-    <div class="row">
-        <div class="col-md-4 mb-4">
-            <div class="card shadow-sm border-0" style="border-radius: 16px;">
-                <div class="card-body text-center p-4">
-                    <div class="mb-3">
-                        <i class="fas fa-user-circle text-secondary" style="font-size: 80px;"></i>
-                    </div>
-                    <h4 class="fw-bold"><?= Html::encode($user->username) ?></h4>
-                    <p class="text-muted"><?= Html::encode($user->email) ?></p>
+
+<div class="profile-container" style="padding: 40px 20px; max-width: 1000px; margin: 0 auto;">
+    
+    <h1 style="font-weight: 700; font-size: 32px; letter-spacing: -0.5px; color: #1d1d1f; margin-bottom: 40px;">Profilom</h1>
+
+    <div class="row g-5">
+        <!-- Bal oldal: Profil kártya -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm p-4 text-center" style="border-radius: 20px; background: #fff;">
+                <div style="font-size: 60px; color: #d2d2d7; margin-bottom: 15px;">
+                    <i class="fas fa-user-circle"></i>
                 </div>
+                <h4 style="font-weight: 600; margin-bottom: 5px;"><?= Html::encode($user->username) ?></h4>
+                <p style="color: #86868b; font-size: 14px;"><?= Html::encode($user->email) ?></p>
             </div>
         </div>
         
+        <!-- Jobb oldal: Form -->
         <div class="col-md-8">
-            <div class="card shadow-sm border-0" style="border-radius: 16px;">
-                <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
-                    <h5 class="fw-bold mb-0">Adatok szerkesztése</h5>
-                </div>
-                <div class="card-body p-4">
+            <div class="card border-0 shadow-sm p-4" style="border-radius: 20px; background: #fff;">
+                <h5 style="font-weight: 600; margin-bottom: 25px; color: #1d1d1f;">Adatok szerkesztése</h5>
+                
+                <?php $form = ActiveForm::begin(['id' => 'profile-form']); ?>
+
+                    <?= $form->field($model, 'username', [
+                        'inputTemplate' => '<div class="input-group"><span class="input-group-text bg-light border-0"><i class="fas fa-user text-muted"></i></span>{input}</div>'
+                    ])->textInput(['class' => 'form-control border-0 bg-light py-3', 'placeholder' => 'Felhasználónév']) ?>
+
+                    <?= $form->field($model, 'email', [
+                        'inputTemplate' => '<div class="input-group"><span class="input-group-text bg-light border-0"><i class="fas fa-envelope text-muted"></i></span>{input}</div>'
+                    ])->textInput(['class' => 'form-control border-0 bg-light py-3', 'placeholder' => 'E-mail cím']) ?>
+
+                    <hr style="margin: 30px 0; border-top: 1px solid #f2f2f7;">
                     
-                    <?php if (Yii::$app->session->hasFlash('success')): ?>
-                        <div class="alert alert-success rounded-3">
-                            <?= Yii::$app->session->getFlash('success') ?>
-                        </div>
-                    <?php endif; ?>
+                    <h6 style="font-weight: 600; margin-bottom: 20px;">Biztonság</h6>
 
-                    <?php $form = ActiveForm::begin(['id' => 'profile-form']); ?>
+                    <?= $form->field($model, 'password', [
+                        'inputTemplate' => '<div class="input-group"><span class="input-group-text bg-light border-0"><i class="fas fa-lock text-muted"></i></span>{input}</div>'
+                    ])->passwordInput(['class' => 'form-control border-0 bg-light py-3', 'placeholder' => 'Új jelszó (ha változtatni szeretnél)']) ?>
 
-                        <?= $form->field($model, 'username')->textInput(['autofocus' => true, 'class' => 'form-control form-control-lg rounded-3 mb-3']) ?>
+                    <div class="form-group mt-4">
+                        <?= Html::submitButton('Változtatások mentése', [
+                            'class' => 'btn btn-dark px-4 py-2', 
+                            'style' => 'border-radius: 20px; font-weight: 500;'
+                        ]) ?>
+                    </div>
 
-                        <?= $form->field($model, 'email')->textInput(['class' => 'form-control form-control-lg rounded-3 mb-3']) ?>
-
-                        <hr class="my-4">
-                        <h6 class="fw-bold mb-3">Biztonság</h6>
-
-                        <?= $form->field($model, 'password')->passwordInput(['class' => 'form-control form-control-lg rounded-3 mb-4', 'placeholder' => 'Csak akkor töltsd ki, ha újat szeretnél...']) ?>
-
-                        <div class="form-group">
-                            <?= Html::submitButton('Változtatások mentése', ['class' => 'btn btn-primary btn-lg rounded-3 px-4 shadow-sm', 'name' => 'profile-button']) ?>
-                        </div>
-
-                    <?php ActiveForm::end(); ?>
-                    
-                </div>
+                <?php ActiveForm::end(); ?>
             </div>
         </div>
     </div>

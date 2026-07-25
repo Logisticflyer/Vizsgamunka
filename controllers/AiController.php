@@ -4,10 +4,14 @@ namespace app\controllers;
 
 use Yii;
 use app\models\AiTasks;
+use app\models\AiSearch; // Fontos: ezt a modellt használd a kereséshez
 use yii\data\ActiveDataProvider;
 use yii\web\Controller;
 use yii\filters\AccessControl;
 use yii\web\NotFoundHttpException;
+use yii\base\Exception;
+use app\models\OfferRequest;
+use yii\web\Response;
 
 class AiController extends Controller
 {
@@ -25,14 +29,16 @@ class AiController extends Controller
 
     public function actionIndex()
     {
-        $query = AiTasks::find()->where(['user_id' => Yii::$app->user->id]);
+        $searchModel = new AiSearch();
+        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
         
-        $dataProvider = new ActiveDataProvider([
-            'query' => $query,
-            'sort' => ['defaultOrder' => ['created_at' => SORT_DESC]],
-        ]);
+        // Biztosítjuk, hogy a felhasználó csak a saját feladatait lássa
+        $dataProvider->query->andWhere(['user_id' => Yii::$app->user->id]);
 
-        return $this->render('index', ['dataProvider' => $dataProvider]);
+        return $this->render('index', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
     }
 
     public function actionCreate()
@@ -46,15 +52,41 @@ class AiController extends Controller
             $model->updated_at = time();
 
             if ($model->save()) {
-                // Biztonságos hívás
-                $aiResponse = $this->callGeminiApi($model->prompt);
-                
-                $model->response = $aiResponse;
-                $model->status = 'completed';
+                try {
+                    // Tudásbázis lekérdezés
+                    $knowledgeItems = \app\models\AiKnowledge::find()
+                        ->where(['like', 'title', $model->prompt])
+                        ->orWhere(['like', 'content', $model->prompt])
+                        ->orWhere(['like', 'category', $model->prompt])
+                        ->all();
+
+                    $context = "A következő információkat használd forrásként:\n";
+                    foreach ($knowledgeItems as $item) {
+                        $context .= "- " . $item->content . "\n";
+                    }
+
+                    $systemPrompt = "Te egy szakképzett fejlesztő és e-kereskedelmi szakértő asszisztens vagy. Válaszaid legyenek szakmaiak, tömörek.\n\n";
+                    $fullPrompt = $systemPrompt . $context . "\nFelhasználó kérdése: " . $model->prompt;
+
+                    $aiResponse = $this->callGeminiApi($fullPrompt);
+
+                    if (strpos($aiResponse, 'HIBA') !== false || strpos($aiResponse, 'DEBUG') !== false) {
+                        throw new Exception("AI API hiba: " . $aiResponse);
+                    }
+
+                    $model->response = $aiResponse;
+                    $model->status = 'completed';
+                    
+                } catch (\Exception $e) {
+                    Yii::error("AI hiba: " . $e->getMessage(), 'ai_process');
+                    $model->response = "Sajnos az AI feldolgozás közben hiba történt.";
+                    $model->status = 'failed';
+                }
+
                 $model->updated_at = time();
                 $model->update(false, ['response', 'status', 'updated_at']);
-
-                Yii::$app->session->setFlash('success', 'AI feladat sikeresen feldolgozva!');
+                
+                Yii::$app->session->setFlash('success', 'Feladat feldolgozva!');
                 return $this->redirect(['index']);
             }
         }
@@ -62,20 +94,78 @@ class AiController extends Controller
         return $this->render('create', ['model' => $model]);
     }
 
+    /**
+     * AI Automatizációs bemutató oldal és okos ajánlatkérő kezelése
+     */
+    public function actionAutomation()
+    {
+        $request = Yii::$app->request;
+
+        // Ha beküldték az ajánlatkérő űrlapot
+        if ($request->isPost && $request->post('OfferForm')) {
+            $postData = $request->post('OfferForm');
+            
+            // Mentés az offer_requests adatbázistáblába
+            $db = Yii::$app->db;
+            $db->createCommand()->insert('offer_requests', [
+                'name' => $postData['name'],
+                'email' => $postData['email'],
+                'message' => $postData['message'],
+                'chat_context' => $postData['chat_context'] ?? '',
+                'created_at' => date('Y-m-d H:i:s'),
+            ])->execute();
+
+            Yii::$app->session->setFlash('success', 'Köszönjük az ajánlatkérésed! Munkatársunk hamarosan felveszi veled a kapcsolatot.');
+            return $this->redirect(['ai/automation']);
+        }
+
+        return $this->render('automation');
+    }
+
+    /**
+     * Dedikált AJAX végpont az AI Automatizációs Chatbothoz
+     */
+    public function actionChatAjax()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $userMessage = Yii::$app->request->post('message');
+
+        if (empty($userMessage)) {
+            return ['success' => false, 'error' => 'Üres üzenet.'];
+        }
+
+        // Szigorú System Prompt, hogy a chatbot kizárólag az automatizációra fókuszáljon
+        $systemPrompt = "Te egy szigorúan szakosodott AI Automatizációs szakértő asszisztens vagy. "
+            . "Kizárólag üzleti automatizációval, munkafolyamat-optimalizációval, digitalizációval és AI integrációval "
+            . "kapcsolatos kérdésekre válaszolhatsz. Ha a felhasználó bármilyen más témáról kérdez (pl. időjárás, játékok, magánélet), "
+            . "akkor udvariasan, de határozottan tereld vissza a témát az AI automatizációra. Válaszaid legyenek tömörek, szakmaiak és meggyőzőek.\n\n";
+
+        $fullPrompt = $systemPrompt . "Felhasználó kérdése: " . $userMessage;
+
+        // Meghívjuk a már meglévő, bevált Gemini API metódusunkat
+        $aiResponse = $this->callGeminiApi($fullPrompt);
+
+        if (strpos($aiResponse, 'HIBA') !== false || strpos($aiResponse, 'DEBUG') !== false) {
+            return ['success' => false, 'reply' => 'Elnézést, a chatbot jelenleg nem elérhető.'];
+        }
+
+        return ['success' => true, 'reply' => $aiResponse];
+    }
+
     private function callGeminiApi($prompt)
     {
-        // Kulcs lekérése biztonságosan a configból
-       $apiKey = $_ENV['GEMINI_API_KEY'] ?? null;
+        $apiKey = $_ENV['GEMINI_API_KEY'] ?? Yii::$app->params['geminiApiKey'] ?? null;
         
-        if (!$apiKey || $apiKey === 'IDE_MÁSOLD_BE_AZ_ÚJ_KULCSODAT') {
-            return "HIBA: Az API kulcs nincs konfigurálva a params.php fájlban.";
+        if (!$apiKey) {
+            Yii::error("API kulcs hiányzik!", 'api');
+            return "HIBA: Az API kulcs nincs konfigurálva.";
         }
         
-        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' . $apiKey;
+        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=' . $apiKey;
 
         $data = [
             'contents' => [
-                ['parts' => [['text' => "Te egy profi magyar nyelvű AI asszisztens vagy. Fogalmazz röviden. A felhasználó kérése: " . $prompt]]]
+                ['parts' => [['text' => $prompt]]]
             ]
         ];
 
@@ -84,75 +174,25 @@ class AiController extends Controller
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
         curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-        
-        // XAMPP SSL fix
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-
+        
         $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $error = curl_error($ch);
         curl_close($ch);
         
         if ($error) {
+            Yii::error("Curl hiba: " . $error, 'api');
             return "HÁLÓZATI HIBA: " . $error;
         }
-        
+
         $decodedResponse = json_decode($response, true);
         
-        if (isset($decodedResponse['candidates'][0]['content']['parts'][0]['text'])) {
-            return $decodedResponse['candidates'][0]['content']['parts'][0]['text'];
+        if ($httpCode !== 200) {
+            Yii::error("API hiba ($httpCode): " . $response, 'api');
+            return "DEBUG HIBA (API válasz $httpCode): " . $response;
         }
         
-        return "DEBUG HIBA (Google válasz): " . (is_array($decodedResponse) ? json_encode($decodedResponse) : $response);
+        return $decodedResponse['candidates'][0]['content']['parts'][0]['text'] ?? "Nem érkezett válasz.";
     }
-
-    public function actionView($id)
-    {
-        $model = AiTasks::findOne(['id' => $id, 'user_id' => Yii::$app->user->id]);
-        if ($model === null) {
-            throw new NotFoundHttpException('A keresett oldal nem található.');
-        }
-        return $this->render('view', ['model' => $model]);
-    }
-
-    public function actionUpdate($id)
-    {
-        $model = AiTasks::findOne(['id' => $id, 'user_id' => Yii::$app->user->id]);
-        if ($model === null) {
-            throw new NotFoundHttpException('A keresett elem nem található.');
-        }
-
-        if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            Yii::$app->session->setFlash('success', 'Módosítva!');
-            return $this->redirect(['view', 'id' => $model->id]);
-        }
-        return $this->render('update', ['model' => $model]);
-    }
-
-    public function actionDelete($id)
-    {
-        $model = AiTasks::findOne(['id' => $id, 'user_id' => Yii::$app->user->id]);
-        if ($model !== null) {
-            $model->delete();
-            Yii::$app->session->setFlash('success', 'Törölve.');
-        }
-        return $this->redirect(['index']);
-    }
-
-    public function actionListModels()
-{
-    $apiKey = Yii::$app->params['geminiApiKey'];
-    $url = 'https://generativelanguage.googleapis.com/v1beta/models?key=' . $apiKey;
-
-    $ch = curl_init($url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-    
-    $response = curl_exec($ch);
-    curl_close($ch);
-    
-    header('Content-Type: application/json');
-    echo $response; // Ez kiírja az összes elérhető modellt
-    exit;
-}
 }

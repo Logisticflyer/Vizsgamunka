@@ -86,3 +86,15 @@ a.desc:after {
 .form-group {
     margin-bottom: 1rem;
 }
+
+.btn-modern {
+    padding: 10px 25px;
+    border-radius: 50px; /* Lekerekített gomb */
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+.btn-modern:hover {
+    transform: translateY(-2px); /* Kicsit megemelkedik */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
