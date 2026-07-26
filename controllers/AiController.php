@@ -65,8 +65,17 @@ class AiController extends Controller
                         $context .= "- " . $item->content . "\n";
                     }
 
-                    $systemPrompt = "Te egy szakképzett fejlesztő és e-kereskedelmi szakértő asszisztens vagy. Válaszaid legyenek szakmaiak, tömörek.\n\n";
-                    $fullPrompt = $systemPrompt . $context . "\nFelhasználó kérdése: " . $model->prompt;
+                    $systemPrompt = "Te a cégünk AI Automatizációs Értékesítési és Szakmai Tanácsadója vagy. "
+                    . "Kizárólag üzleti automatizációval, munkafolyamat-optimalizációval, digitalizációval és AI integrációval kapcsolatos kérdésekre válaszolhatsz.\n\n"
+                    . "FŐ CÉLOD: Az ügyfél igényeinek és problémáinak feltérképezése, a megvalósíthatóság igazolása és az ügyfél terelése az ajánlatkérés felé.\n\n"
+                    . "SZIGORÚ MŰKÖDÉSI SZABÁLYOK:\n"
+                    . "1. NE ADJ 'Csináld magad' (DIY) oktatóanyagot vagy lépésről lépésre követhető technikai leírást! Ne azt magyarázd el, hogyan építse meg ő magának, hanem azt, hogy a cégünk hogyan tudja ezt kulcsrakészen, automatizáltan megvalósítani a számára.\n"
+                    . "2. KÉRDEZZ VISSZA ÉS GYŰJTS INFORMÁCIÓT: Amikor az ügyfél felvet egy problémát, tegyél fel 1-2 tisztázó kérdést (pl. 'Milyen szoftvereket használtok jelenleg?', 'Hetente hány órát vesz igénybe ez a folyamat?'), hogy pontosabb képet kapjunk a feladatról az adminisztrátor számára.\n"
+                    . "3. ÖSZTÖNÖZZ AJÁNLATKÉRÉSRE: Válaszaid végén mindig finoman említsd meg, hogy a bal oldali 'Ajánlatkérés Indítása' gombra kattintva azonnal elküldheti ezt az igényt, és az AI automatikusan összefoglalja a megbeszélteket a csapatunknak.\n"
+                    . "4. NO MARKDOWN: Soha ne használj semmilyen Markdown formázást (ne használj csillagokat *, félkövér jelölést **, listajeleket vagy hashtageket ###)! A válaszaidat kizárólag sima, tiszta, folyószöveges formában írd.\n"
+                    . "5. Válaszaid legyenek tömörek, szakmaiak, elegánsak és meggyőzőek.\n\n";
+
+                    $fullPrompt = $systemPrompt . "Felhasználó kérdése: " . $userMessage;
 
                     $aiResponse = $this->callGeminiApi($fullPrompt);
 
@@ -101,7 +110,7 @@ class AiController extends Controller
     {
         $request = Yii::$app->request;
 
-        // Ha beküldték az ajánlatkérő űrlapot
+        // Ha beküldték az ajánlatkérő űrlapot (Modalon keresztül)
         if ($request->isPost && $request->post('OfferForm')) {
             $postData = $request->post('OfferForm');
             
@@ -123,26 +132,69 @@ class AiController extends Controller
     }
 
     /**
+     * Admin nézet a beérkezett ajánlatkérésekhez (Lead Management)
+     */
+    public function actionOffers()
+    {
+        // Szigorú admin jogosultság ellenőrzés
+        if (Yii::$app->user->isGuest || Yii::$app->user->identity->username !== 'admin') {
+            throw new \yii\web\ForbiddenHttpException('Nincs jogosultságod az oldal megtekintéséhez.');
+        }
+
+        $dataProvider = new ActiveDataProvider([
+            'query' => OfferRequest::find()->orderBy(['created_at' => SORT_DESC]),
+            'pagination' => [
+                'pageSize' => 10,
+            ],
+        ]);
+
+        return $this->render('offers', [
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
+    /**
      * Dedikált AJAX végpont az AI Automatizációs Chatbothoz
+     */
+    /**
+     * Dedikált AJAX végpont az AI Automatizációs Chatbothoz (Teljes Memóriával és Sales-Fókusszal)
+     */
+    /**
+     * Dedikált AJAX végpont az AI Automatizációs Chatbothoz (Tényalapú Memóriával és Egységes Hangnemmel)
+     */
+   /**
+     * Dedikált AJAX végpont az AI Automatizációs Chatbothoz (Tényalapú Memória & Spammentes Párbeszéd)
      */
     public function actionChatAjax()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $userMessage = Yii::$app->request->post('message');
+        $chatHistory = Yii::$app->request->post('chatHistory', '');
 
         if (empty($userMessage)) {
             return ['success' => false, 'error' => 'Üres üzenet.'];
         }
 
-        // Szigorú System Prompt, hogy a chatbot kizárólag az automatizációra fókuszáljon
-        $systemPrompt = "Te egy szigorúan szakosodott AI Automatizációs szakértő asszisztens vagy. "
-            . "Kizárólag üzleti automatizációval, munkafolyamat-optimalizációval, digitalizációval és AI integrációval "
-            . "kapcsolatos kérdésekre válaszolhatsz. Ha a felhasználó bármilyen más témáról kérdez (pl. időjárás, játékok, magánélet), "
-            . "akkor udvariasan, de határozottan tereld vissza a témát az AI automatizációra. Válaszaid legyenek tömörek, szakmaiak és meggyőzőek.\n\n";
+        // Szigorú Értékesítési, Tényalapú, Természetes & SPAMMENTES System Prompt
+        $systemPrompt = "Te a cégünk AI Automatizációs Értékesítési és Igényfelmérő Szakértője vagy. "
+            . "Kizárólag üzleti automatizációval, munkafolyamat-optimalizációval és AI integrációval kapcsolatos kérdésekre válaszolhatsz.\n\n"
+            . "SZIGORÚ MŰKÖDÉSI SZABÁLYOK:\n"
+            . "1. HANGNEM: Használj kivétel nélkül EGYSÉGES, BARÁTSÁGOS ÉS TISZTELETTUDÓ TEGEZÉST! Soha ne használj magázó formákat ('Ön', 'Önnek', 'Önöknek')!\n"
+            . "2. ABSZOLÚT MEMÓRIA ÉS TÉNYEK: Szigorúan olvasd végig a beszélgetési előzményeket! Amit a felhasználó egyszer már elmondott (pl. hogy telefonszervize van, hány órát dolgozik Excelben, hány munkatársa van), AZT MEG KELL JEGYEZNED! SO-HA ne mondd, hogy 'még nem említetted' vagy 'nem tudom mivel foglalkozol', ha ez a beszélgetésből már kiderült! Ha a felhasználó visszakérdez ('Mivel foglalkozok?'), azonnal idézd fel a pontos tényeket, amiket korábban megadott neked.\n"
+            . "3. SOHA NE HASZNÁLJ REKLÁM-SABLONSZÖVEGET A VÁLASZOK VÉGÉN: SOHA ne fűzd hozzá minden üzenet végéhez az 'Ajánlatkérés Indítása' gombra terelő sablonszöveget! Ez kifejezetten idegesíti az ügyfelet. Válaszolj természetesen, közvetlenül és kérdezz vissza. Kizárólag akkor említsd meg finoman a bal oldali ajánlatkérő gombot, ha a felhasználó kifejezetten árajánlatot vagy árakat kér, vagy ha már minden szükséges részletet tisztáztatok!\n"
+            . "4. ZERO DIY / ZERO TECHNIKAI LÉPÉSEK: Ne magyarázd el a megoldás technikai lépéseit, ne adj tanácsot arra, hogyan csinálja meg maga! Kizárólag azt emeld ki, hogy a MI CSAPATUNK ezt a terhet teljesen leveszi a válláról és kulcsrakészen megépíti a számára.\n"
+            . "5. KÉRDEZZ VISSZA ÉS GYŰJTS INFORMÁCIÓT: Tegyél fel 1-2 konkrét tisztázó kérdést, de Kizárólag OLYAN ADATRA kérdezz rá, amit a felhasználó MÉG NEM mondott el!\n"
+            . "6. NO MARKDOWN: Soha ne használj semmilyen Markdown formázást (nincsenek csillagok *, félkövér **, hashtagek ###, listajelek). Sima, tiszta folyószöveget írj.\n\n";
 
-        $fullPrompt = $systemPrompt . "Felhasználó kérdése: " . $userMessage;
+        $fullPrompt = $systemPrompt;
+        
+        if (!empty($chatHistory) && trim($chatHistory) !== "--- Chat Előzmény a Modalhoz ---") {
+            $fullPrompt .= "EDDIGI BESZÉLGETÉS ELŐZMÉNYEI:\n" . $chatHistory . "\n\n";
+        }
+        
+        $fullPrompt .= "FELHASZNÁLÓ ÚJ ÜZENETE: " . $userMessage;
 
-        // Meghívjuk a már meglévő, bevált Gemini API metódusunkat
+        // Meghívjuk a Gemini API-t
         $aiResponse = $this->callGeminiApi($fullPrompt);
 
         if (strpos($aiResponse, 'HIBA') !== false || strpos($aiResponse, 'DEBUG') !== false) {
@@ -194,5 +246,45 @@ class AiController extends Controller
         }
         
         return $decodedResponse['candidates'][0]['content']['parts'][0]['text'] ?? "Nem érkezett válasz.";
+    }
+
+    /**
+     * Elemzi a teljes chat előzményt és egy strukturált, profi projekt-specifikációt generál az adminnak.
+     */
+    public function actionSummarizeChat()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $chatHistory = Yii::$app->request->post('chatHistory');
+
+        if (empty($chatHistory) || trim($chatHistory) === "--- Chat Előzmény a Modalhoz ---") {
+            return [
+                'success' => true, 
+                'summary' => "Az ügyfél még nem kezdeményezett érdemi beszélgetést az AI asszisztenssel. Közvetlen megkeresés."
+            ];
+        }
+
+        // Senior AI Architect Prompt a tömbösített, strukturált összefoglalóhoz
+        $systemPrompt = "Te egy senior AI rendszermérnök és projektmenedzser vagy. "
+            . "A feladatod, hogy az alábbi ügyfélbeszélgetés alapján készíts egy rendkívül profi, strukturált, csoportosított projekt-specifikációt az adminisztrátor számára.\n"
+            . "FONTOS: Soha ne használj Markdown karaktereket (*, **, ###)! Kizárólag tiszta, átlátható soremelésekkel és nagybetűs szekciócímekkel tagold a szöveget.\n\n"
+            . "A kimeneted szigorúan kövesse ezt a struktúrát:\n"
+            . "ÜGYFÉL FŐ CÉLJA:\n"
+            . "[Tömör, 1-2 mondatos összefoglaló a problémáról]\n\n"
+            . "IGÉNYELT AUTOMATIZÁCIÓK & MODULOK:\n"
+            . "- [1. azonosított funkció / munkafolyamat]\n"
+            . "- [2. azonosított funkció / munkafolyamat]\n\n"
+            . "JAVASOLT TECHNOLÓGIAI STACK:\n"
+            . "[Pl. Make.com / n8n / OpenAI API / Custom Webhook / Python]\n\n"
+            . "ADMINISZTRÁTOR TEENDŐJE:\n"
+            . "[Konkrét cselekvési terv a kapcsolatfelvételhez]\n\n"
+            . "A feldolgozandó beszélgetés előzménye:\n";
+
+        $fullPrompt = $systemPrompt . $chatHistory;
+        $rawSummary = $this->callGeminiApi($fullPrompt);
+
+        // Tisztítás a biztonság kedvéért
+        $cleanSummary = str_replace(['**', '*', '###', '##', '#'], '', $rawSummary);
+
+        return ['success' => true, 'summary' => trim($cleanSummary)];
     }
 }

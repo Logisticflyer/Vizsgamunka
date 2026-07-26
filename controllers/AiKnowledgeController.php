@@ -2,6 +2,7 @@
 
 namespace app\controllers;
 
+use Yii;
 use app\models\AiKnowledge;
 use app\models\AiKnowledgeSearch;
 use yii\web\Controller;

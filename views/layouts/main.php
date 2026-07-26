@@ -89,14 +89,15 @@ $action = Yii::$app->controller->action->id;
     echo Nav::widget([
         'options' => ['class' => 'navbar-nav'], 
         'items' => [
-            ['label' => '<i class="fas fa-home fa-fw"></i> Főoldal', 'encode' => false, 'url' => ['/site/index'], 'active' => ($controller == 'site' && $action == 'index')],
-            ['label' => '<i class="fas fa-tachometer-alt fa-fw"></i> Vezérlőpult', 'encode' => false, 'url' => ['/site/choose'], 'active' => ($controller == 'site' && $action == 'choose')],
+            ['label' => '<i class="fas fa-home fa-fw"></i> Főoldal', 'encode' => false, 'url' => ['/site/index'], 'active' => ($controller == 'site' &&$action == 'index')],
+            ['label' => '<i class="fas fa-tachometer-alt fa-fw"></i> Vezérlőpult', 'encode' => false, 'url' => ['/site/choose'], 'active' => ($controller == 'site' &&$action == 'choose')],
             ['label' => '<i class="fas fa-robot fa-fw"></i> AI Asszisztens', 'encode' => false, 'url' => ['/ai/index'], 'active' => ($controller == 'ai')],
             
-            // --- CSAK ADMIN (Tudásbázis védelem) ---
+            // --- CSAK ADMIN (Tudásbázis és Ajánlatok védelem) ---
             (Yii::$app->user->identity->username === 'admin') ? ['label' => '<i class="fas fa-book fa-fw"></i> Tudásbázis', 'encode' => false, 'url' => ['/ai-knowledge/index'], 'active' => ($controller == 'ai-knowledge')] : '',
+            (Yii::$app->user->identity->username === 'admin') ? ['label' => '<i class="fas fa-inbox fa-fw"></i> Ajánlatok', 'encode' => false, 'url' => ['/ai/offers'], 'active' => ($controller == 'ai' &&$action == 'offers')] : '',
             
-            ['label' => '<i class="fas fa-user-circle fa-fw"></i> Profilom', 'encode' => false, 'url' => ['/site/profile'], 'active' => ($controller == 'site' && $action == 'profile')],
+            ['label' => '<i class="fas fa-user-circle fa-fw"></i> Profilom', 'encode' => false, 'url' => ['/site/profile'], 'active' => ($controller == 'site' &&$action == 'profile')],
             
             '<li class="nav-item">'
             . Html::beginForm(['/site/logout'], 'post', ['class' => 'd-flex'])
@@ -112,7 +113,7 @@ $action = Yii::$app->controller->action->id;
 
 <main id="main" class="flex-shrink-0" role="main">
     <div class="container-fluid p-4">
-        <?php foreach (Yii::$app->session->getAllFlashes() as $key => $message): ?>
+        <?php foreach (Yii::$app->session->getAllFlashes() as $key =>$message): ?>
             <div class="alert alert-<?= $key ?> alert-dismissible fade show shadow-sm border-0" role="alert" style="border-radius: 15px;">
                 <i class="fas fa-info-circle me-2"></i> <?= $message ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>

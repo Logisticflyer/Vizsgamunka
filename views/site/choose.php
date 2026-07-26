@@ -15,7 +15,7 @@ $this->title = 'Vezérlőpult';
     <div class="row justify-content-center g-4">
         
         <!-- AI Asszisztens Kártya -->
-        <div class="col-12 col-md-6 col-lg-5 d-flex justify-content-center">
+        <div class="col-12 col-md-6 col-lg-3 d-flex justify-content-center">
             <a href="<?= Url::to(['/ai/index']) ?>" class="service-card-link w-100">
                 <div class="service-card">
                     <div class="service-icon-wrap">
@@ -32,8 +32,26 @@ $this->title = 'Vezérlőpult';
             </a>
         </div>
 
+        <!-- AI Automatizáció & Chatbot Kártya -->
+        <div class="col-12 col-md-6 col-lg-3 d-flex justify-content-center">
+            <a href="<?= Url::to(['/ai/automation']) ?>" class="service-card-link w-100">
+                <div class="service-card">
+                    <div class="service-icon-wrap">
+                        <i class="fas fa-cogs"></i>
+                    </div>
+
+                    <h3>AI Automatizáció</h3>
+                    <p>Ismerd meg az AI alapú munkafolyamat-optimalizációt, próbáld ki a fókuszált chatet és kérj ajánlatot!</p>
+
+                    <span class="card-arrow">
+                        Megnyitás <i class="fas fa-arrow-right"></i>
+                    </span>
+                </div>
+            </a>
+        </div>
+
         <!-- Tudásbázis Kártya -->
-        <div class="col-12 col-md-6 col-lg-5 d-flex justify-content-center">
+        <div class="col-12 col-md-6 col-lg-3 d-flex justify-content-center">
             <a href="<?= Url::to(['/ai-knowledge/index']) ?>" class="service-card-link w-100">
                 <div class="service-card">
                     <div class="service-icon-wrap">
@@ -49,12 +67,31 @@ $this->title = 'Vezérlőpult';
                 </div>
             </a>
         </div>
+
+        <?php if (!Yii::$app->user->isGuest && Yii::$app->user->identity->username === 'admin'): ?>
+        <!-- Beérkezett Ajánlatok (Admin Kártya) -->
+        <div class="col-12 col-md-6 col-lg-3 d-flex justify-content-center">
+            <a href="<?= Url::to(['/ai/offers']) ?>" class="service-card-link w-100">
+                <div class="service-card border-primary border-opacity-25">
+                    <div class="service-icon-wrap bg-primary bg-opacity-10 text-primary">
+                        <i class="fas fa-inbox"></i>
+                    </div>
+
+                    <h3>Beérkezett Ajánlatok</h3>
+                    <p>Tekintsd át az AI automatizációs oldalon beküldött ügyféligényeket és a chat-előzményeket.</p>
+
+                    <span class="card-arrow">
+                        Leadek Megtekintése <i class="fas fa-arrow-right"></i>
+                    </span>
+                </div>
+            </a>
+        </div>
+        <?php endif; ?>
         
     </div>
 </div>
 
 <style>
-/* A meglévő stílusodat használtam, ez maradhat 1:1-ben */
 .choose-container {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     background-color: #f5f5f7;
@@ -66,7 +103,7 @@ $this->title = 'Vezérlőpult';
 .choose-header p { font-size: 19px; color: #86868b; max-width: 600px; margin: 0 auto; }
 .service-card-link { text-decoration: none !important; display: block; }
 .service-card {
-    background: #ffffff; border-radius: 20px; padding: 40px 30px; text-align: center;
+    background: #ffffff; border-radius: 20px; padding: 40px 20px; text-align: center;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03); border: 1px solid #e5e5e7;
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     display: flex; flex-direction: column; align-items: center; height: 100%;
@@ -74,8 +111,8 @@ $this->title = 'Vezérlőpult';
 .service-card-link:hover .service-card { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08); border-color: #0071e3; }
 .service-icon-wrap { font-size: 32px; color: #0071e3; background: #f5f5f7; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; border-radius: 50%; margin-bottom: 25px; transition: 0.3s; }
 .service-card-link:hover .service-icon-wrap { background: #0071e3; color: #ffffff; }
-.service-card h3 { font-size: 22px; font-weight: 600; margin-bottom: 15px; color: #1d1d1f; }
-.service-card p { font-size: 15px; color: #86868b; line-height: 1.5; margin-bottom: 25px; flex-grow: 1; }
+.service-card h3 { font-size: 20px; font-weight: 600; margin-bottom: 15px; color: #1d1d1f; }
+.service-card p { font-size: 14px; color: #86868b; line-height: 1.5; margin-bottom: 25px; flex-grow: 1; }
 .card-arrow { font-size: 14px; font-weight: 500; color: #0071e3; background: #f5f5f7; padding: 8px 18px; border-radius: 18px; display: flex; align-items: center; gap: 8px; transition: all 0.2s ease; }
 .service-card-link:hover .card-arrow { background: #0071e3; color: #ffffff; gap: 12px; }
 </style>
