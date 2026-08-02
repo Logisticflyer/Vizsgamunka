@@ -1,9 +1,41 @@
-version: '2'
-services:
-  php:
-    image: yiisoftware/yii2-php:7.4-apache
-    volumes:
-      - ~/.composer-docker/cache:/root/.composer/cache:delegated
-      - ./:/app:delegated
+﻿services:
+  mysql:
+    image: mysql:8.0
+    container_name: vizsgamunka_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: vizsgamunka
+      MYSQL_USER: vizsgamunka_user
+      MYSQL_PASSWORD: vizsgamunka_pass
     ports:
-      - '8000:80'
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqldump", "--user=root", "--password=rootpassword", "--no-data", "vizsgamunka"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vizsgamunka_php
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_HOST: mysql
+      DB_USER: vizsgamunka_user
+      DB_PASSWORD: vizsgamunka_pass
+      DB_NAME: vizsgamunka
+
+volumes:
+  mysql_data:

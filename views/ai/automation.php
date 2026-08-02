@@ -95,16 +95,16 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/chart.js', ['position' => \y
 
         </div>
 
-        <!-- JOBB OLDAL: Dedikált Fókuszált AI Chatbot (Stabil Sticky Sidebar) -->
+        <!-- JOBB OLDAL: Dedikált Fókuszált AI Chatbot (10/10 Pixel-Perfect UX Widget) -->
         <div class="col-lg-4">
             <div style="position: sticky; top: 20px;">
                 <div class="card shadow-sm border border-light rounded-4 bg-white overflow-hidden">
                     
                     <!-- Chat Header -->
-                    <div class="card-header bg-dark text-white p-3 d-flex align-items-center justify-content-between">
+                    <div class="card-header bg-dark text-white p-3 px-4 d-flex align-items-center justify-content-between border-0">
                         <div class="d-flex align-items-center">
-                            <div class="bg-primary rounded-circle p-2 me-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
-                                <i class="fas fa-robot text-white"></i>
+                            <div class="bg-primary rounded-circle p-2 me-3 d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px;">
+                                <i class="fas fa-robot text-white fs-6"></i>
                             </div>
                             <div>
                                 <h6 class="mb-0 fw-bold" style="font-size: 15px;">Automatizációs Szakértő AI</h6>
@@ -114,24 +114,22 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/chart.js', ['position' => \y
                     </div>
 
                     <!-- Chat Body / Messages -->
-                    <div id="chat-messages" class="card-body p-3 overflow-auto" style="height: 450px; background: #fbfbfd;">
+                    <div id="chat-messages" class="card-body p-3 px-4 overflow-auto" style="height: 450px; background: #fbfbfd;">
                         <div class="mb-3 text-start">
-                            <div class="d-inline-block p-3 rounded-4 bg-white shadow-sm border border-light text-dark chat-bubble">
-                                Üdvözöllek! Én vagyok az AI Automatizációs asszisztensed. Kérdezz bátran a munkafolyamat-optimalizálásról, és ha készen állsz, kérj személyre szabott ajánlatot a bal oldali gombbal!
-                            </div>
+                            <div class="d-inline-block p-3 rounded-4 bg-white shadow-sm border border-light text-dark chat-bubble">Üdvözöllek! Én vagyok az AI Automatizációs asszisztensed. Kérdezz bátran a munkafolyamat-optimalizálásról, és ha készen állsz, kérj személyre szabott ajánlatot a bal oldali gombbal!</div>
                         </div>
                     </div>
 
-                    <!-- Chat Input (Automatikusan méreteződő Textarea) -->
-                    <div class="card-footer bg-white p-3 border-top border-light">
-                        <div class="input-group align-items-end">
-                            <textarea id="chat-input" class="form-control rounded-4 border-end-0 bg-light p-3" rows="1" placeholder="Írd meg a kérdésed..." style="resize: none; max-height: 120px; overflow-y: auto; line-height: 1.5; font-size: 14px; border-top-right-radius: 0 !important; border-bottom-right-radius: 0 !important;"></textarea>
-                            <button class="btn btn-primary rounded-4 px-4 d-flex align-items-center justify-content-center" type="button" id="send-chat-btn" style="height: 48px; border-top-left-radius: 0 !important; border-bottom-left-radius: 0 !important;">
-                                <i class="fas fa-paper-plane"></i>
+                    <!-- Chat Input (Pill Container - SaaS Standard) -->
+                    <div class="card-footer bg-white p-3 px-4 border-top border-light">
+                        <div class="chat-input-wrapper p-2 bg-light border border-light rounded-4 d-flex align-items-center shadow-sm">
+                            <textarea id="chat-input" class="form-control border-0 bg-transparent px-2 shadow-none" rows="1" placeholder="Írd meg a kérdésed..." style="resize: none; max-height: 120px; overflow-y: auto; line-height: 1.5; font-size: 14px; outline: none;"></textarea>
+                            <button class="btn btn-primary rounded-circle shadow-sm ms-2 flex-shrink-0 d-flex align-items-center justify-content-center" type="button" id="send-chat-btn" style="width: 38px; height: 38px;">
+                                <i class="fas fa-paper-plane" style="font-size: 13px;"></i>
                             </button>
                         </div>
-                        <div class="text-end mt-1" style="font-size: 10px; color: #a1a1a6;">
-                            <kbd style="font-size: 9px; background: #eee; color: #555; border-radius: 3px; padding: 1px 4px;">Enter</kbd> küldés | <kbd style="font-size: 9px; background: #eee; color: #555; border-radius: 3px; padding: 1px 4px;">Shift+Enter</kbd> új sor
+                        <div class="d-flex justify-content-end align-items-center mt-2 px-1 text-muted" style="font-size: 10px;">
+                            <span><kbd style="font-size: 9px; background: #eef0f4; color: #555; border-radius: 3px; padding: 1px 4px;">Enter</kbd> küldés &nbsp;|&nbsp; <kbd style="font-size: 9px; background: #eef0f4; color: #555; border-radius: 3px; padding: 1px 4px;">Shift+Enter</kbd> új sor</span>
                         </div>
                     </div>
 
@@ -174,9 +172,7 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/chart.js', ['position' => \y
                             </span>
                             <span class="text-muted small"><i class="fas fa-sync-alt fa-spin text-primary"></i> Élő szinkron</span>
                         </div>
-                        <div id="ai-live-summary" class="text-secondary small fst-italic" style="line-height: 1.6; white-space: pre-wrap;">
-                            "Még nem beszélgettél az AI asszisztensdel. Írd meg a céljaidat lent, vagy kérdezz tőle a jobb oldali chatben, és a rendszer automatikusan kiegészíti ezt a tervet!"
-                        </div>
+                        <div id="ai-live-summary" class="text-secondary small fst-italic" style="line-height: 1.6; white-space: pre-wrap;">"Még nem beszélgettél az AI asszisztensdel. Írd meg a céljaidat lent, vagy kérdezz tőle a jobb oldali chatben, és a rendszer automatikusan kiegészíti ezt a tervet!"</div>
                     </div>
 
                     <!-- Input Mezők -->
@@ -215,9 +211,15 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/chart.js', ['position' => \y
     background: linear-gradient(135deg, rgba(13, 110, 253, 0.04) 0%, rgba(0, 212, 255, 0.08) 100%);
     backdrop-filter: blur(10px);
 }
-.form-control:focus {
+
+/* Chat Input Wrapper Fókusz effektus (Pill Container UI) */
+.chat-input-wrapper {
+    transition: all 0.2s ease-in-out;
+}
+.chat-input-wrapper:focus-within {
     border-color: #0d6efd !important;
     box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15) !important;
+    background: #ffffff !important;
 }
 
 /* Tördelés és elrendezés a chat buborékokban */
@@ -384,12 +386,7 @@ function showTypingIndicator() {
     const typingDiv = document.createElement('div');
     typingDiv.id = 'typing-indicator';
     typingDiv.className = 'mb-3 text-start';
-    typingDiv.innerHTML = `<div class="d-inline-block p-3 rounded-4 bg-white text-muted border border-light shadow-sm chat-bubble">
-        <span class="spinner-grow spinner-grow-sm text-primary me-1" role="status"></span>
-        <span class="spinner-grow spinner-grow-sm text-primary me-1" role="status"></span>
-        <span class="spinner-grow spinner-grow-sm text-primary" role="status"></span>
-        <span class="ms-2 small text-secondary">Az AI szakértő gondolkodik...</span>
-    </div>`;
+    typingDiv.innerHTML = `<div class="d-inline-block p-3 rounded-4 bg-white text-muted border border-light shadow-sm chat-bubble"><span class="spinner-grow spinner-grow-sm text-primary me-1" role="status"></span><span class="spinner-grow spinner-grow-sm text-primary me-1" role="status"></span><span class="spinner-grow spinner-grow-sm text-primary me-2" role="status"></span><span class="small text-secondary">Az AI szakértő gondolkodik...</span></div>`;
     chatMessages.appendChild(typingDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
@@ -403,19 +400,15 @@ function sendQuery() {
     const text = chatInput.value.trim();
     if (!text) return;
 
-    // Kimentjük az eddigi előzményt az ÚJ üzenet hozzáadása ELŐTT
     const previousHistory = fullChatTranscript;
 
-    // Megjelenítjük a felületen az új üzenetet
     appendMessage('user', text);
     chatInput.value = '';
     
-    // Visszaállítjuk a beviteli mező alapméretét
     chatInput.style.height = 'auto';
     
     showTypingIndicator();
 
-    // Elküldjük a pontos korábbi előzményt ÉS az új üzenetet külön
     const bodyData = 'message=' + encodeURIComponent(text) + '&chatHistory=' + encodeURIComponent(previousHistory);
 
     fetch('<?= \yii\helpers\Url::to(['ai/chat-ajax']) ?>', {
