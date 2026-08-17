@@ -196,6 +196,9 @@ class AiController extends Controller
     /**
      * Dedikált AJAX végpont az AI Automatizációs Chatbothoz
      */
+    /**
+     * Dedikált AJAX végpont az AI Automatizációs Chatbothoz
+     */
     public function actionChatAjax()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
@@ -206,18 +209,17 @@ class AiController extends Controller
             return ['success' => false, 'reply' => 'Üres üzenet.'];
         }
 
-        // Szigorú Értékesítési, Tényalapú, Természetes & SPAMMENTES System Prompt
+        // System Prompt
         $systemPrompt = "Te a cégünk AI Automatizációs Értékesítési és Igényfelmérő Szakértője vagy. "
             . "Kizárólag üzleti automatizációval, munkafolyamat-optimalizációval és AI integrációval kapcsolatos kérdésekre válaszolhatsz.\n\n"
             . "SZIGORÚ MŰKÖDÉSI SZABÁLYOK:\n"
-            . "1. HANGNEM: Használj kivétel nélkül EGYSÉGES, BARÁTSÁGOS ÉS TISZTELETTUDÓ TEGEZÉST! Soha ne használj magázó formákat ('Ön', 'Önnek', 'Önöknek')!\n"
-            . "2. ABSZOLÚT MEMÓRIA ÉS TÉNYEK: Szigorúan olvasd végig a beszélgetési előzményeket! Amit a felhasználó egyszer már elmondott (pl. hogy telefonszervize, hamburgerezője van, hány órát dolgozik Excelben, kártya/csomag figyelés, híváskezelés), AZT MEG KELL JEGYEZNED! SO-HA ne mondd, hogy 'még nem említetted' vagy 'nem tudom mivel foglalkozol', ha ez a beszélgetésből már kiderült!\n"
-            . "3. SOHA NE HASZNÁLJ REKLÁM-SABLONSZÖVEGET A VÁLASZOK VÉGÉN: SOHA ne fűzd hozzá minden üzenet végéhez az 'Ajánlatkérés Indítása' gombra terelő sablonszöveget! Válaszolj természetesen, közvetlenül és kérdezz vissza. Kizárólag akkor említsd meg finoman a bal oldali ajánlatkérő gombot, ha a felhasználó kifejezetten árajánlatot vagy árakat kér!\n"
-            . "4. ZERO DIY / ZERO TECHNIKAI LÉPÉSEK: Ne magyarázd el a megoldás technikai lépéseit, ne adj tanácsot arra, hogyan csinálja meg maga! Kizárólag azt emeld ki, hogy a MI CSAPATUNK ezt a terhet teljesen leveszi a válláról és kulcsrakészen megépíti a számára.\n"
-            . "5. KÉRDEZZ VISSZA ÉS GYŰJTS INFORMÁCIÓT: Tegyél fel 1-2 konkrét tisztázó kérdést, de Kizárólag OLYAN ADATRA kérdezz rá, amit a felhasználó MÉG NEM mondott el!\n"
-            . "6. NO MARKDOWN: Soha ne használj semmilyen Markdown formázást (nincsenek csillagok *, félkövér **, hashtagek ###, listajelek). Sima, tiszta folyószöveget írj.";
+            . "1. HANGNEM: Használj kivétel nélkül EGYSÉGES, BARÁTSÁGOS ÉS TISZTELETTUDÓ TEGEZÉST!\n"
+            . "2. ABSZOLÚT MEMÓRIA ÉS TÉNYEK: Szigorúan olvasd végig a beszélgetési előzményeket!\n"
+            . "3. SOHA NE HASZNÁLJ REKLÁM-SABLONSZÖVEGET A VÁLASZOK VÉGÉN!\n"
+            . "4. ZERO DIY / ZERO TECHNIKAI LÉPÉSEK!\n"
+            . "5. KÉRDEZZ VISSZA ÉS GYŰJTS INFORMÁCIÓT!\n"
+            . "6. NO MARKDOWN: Sima, tiszta folyószöveget írj.";
 
-        // A TELJES beszélgetési előzményt hiánytalanul átadjuk
         $fullPrompt = "";
         if (!empty($chatHistory) && trim($chatHistory) !== "--- Chat Előzmény a Modalhoz ---") {
             $fullPrompt .= "EDDIGI TELJES BESZÉLGETÉS ELŐZMÉNYEI:\n" . $chatHistory . "\n\n";
@@ -225,11 +227,20 @@ class AiController extends Controller
         
         $fullPrompt .= "FELHASZNÁLÓ ÚJ ÜZENETE: " . $userMessage;
 
-        // Meghívjuk az API kezelőt
+        // API hívás
         $aiResponse = $this->callGeminiApi($fullPrompt, $systemPrompt);
 
         if (strpos($aiResponse, 'HIBA:') === 0) {
-            Yii::error("Gemini hiba válasz az actionChatAjax-ban: " . $aiResponse, 'ai_chat');
+            Yii::warning("Gemini hiba/korlát az actionChatAjax-ban: " . $aiResponse, 'ai_chat');
+            
+            // Ha ráta-korlát (429) történt, success => false-t adunk vissza, hogy a JS NE mentse el az előzmények közé!
+            if (strpos($aiResponse, '429') !== false || strpos($aiResponse, 'exceeded') !== false || strpos($aiResponse, 'Quota') !== false) {
+                return [
+                    'success' => false, 
+                    'reply' => 'Az AI asszisztens jelenleg túl sok kérést kapott. Kérlek, várj 10 másodpercet, és próbáld újra!'
+                ];
+            }
+            
             return ['success' => false, 'reply' => $aiResponse];
         }
 
@@ -276,22 +287,10 @@ class AiController extends Controller
     }
 
     /**
-     * EGYSÉGES, GOLYÓÁLLÓ SEGÉDFÜGGVÉNY A GEMINI API HÍVÁSÁHOZ
-     */
-    /**
-     * EGYSÉGES, GOLYÓÁLLÓ SEGÉDFÜGGVÉNY A GEMINI API HÍVÁSÁHOZ
-     */
-    /**
-     * EGYSÉGES, GOLYÓÁLLÓ SEGÉDFÜGGVÉNY A GEMINI API HÍVÁSÁHOZ (AQ. ÉS AIza. KULCSOKHOZ)
-    /**
-     * EGYSÉGES, GOLYÓÁLLÓ SEGÉDFÜGGVÉNY A GEMINI API HÍVÁSÁHOZ
-     */
-    /**
-     * EGYSÉGES, GOLYÓÁLLÓ SEGÉDFÜGGVÉNY AUTOMATIKUS MODELL-FALLBACKEL
+     * EGYSÉGES, GOLYÓÁLLÓ SEGÉDFÜGGVÉNY AUTOMATIKUS ÚJRAPRÓBÁLKOZÁSSAL ÉS FALLBACKEL
      */
     private function callGeminiApi($prompt, $systemInstruction = null)
     {
-        // 1. KULCS BEOLVASÁSA (PARMAS PRIORITÁS)
         $rawApiKey = Yii::$app->params['geminiApiKey'] 
             ?? Yii::$app->params['cadGeminiApiKey'] 
             ?? Yii::$app->params['vintedGeminiApiKey']
@@ -304,20 +303,20 @@ class AiController extends Controller
             return "HIBA: Az API kulcs nincs konfigurálva a config/params.php-ban.";
         }
 
-        // 2. KULCS TISZTÍTÁSA
         $cleanApiKey = trim($rawApiKey);
         $cleanApiKey = preg_replace('/^Bearer\s+/i', '', $cleanApiKey);
         $cleanApiKey = trim($cleanApiKey, " \t\n\r\0\x0B\"'");
 
-        // 3. TÁMOGATOTT MODELL AZONOSÍTÓK (AUTOMATIKUS PRÓBÁLKOZÁSI SORREND)
         $modelsToTry = [
-            'gemini-2.0-flash',
-            'gemini-1.5-flash',
-            'gemini-2.5-flash'
+           'gemini-2.5-flash',
+           'gemini-2.0-flash-lite',
+           'gemini-flash-latest',
+           'gemini-2.5-flash-lite'
         ];
 
         $lastResponse = null;
         $lastHttpCode = 0;
+        $hadRateLimit = false;
 
         foreach ($modelsToTry as $modelName) {
             $url = "https://generativelanguage.googleapis.com/v1beta/models/{$modelName}:generateContent?key=" . $cleanApiKey;
@@ -343,17 +342,15 @@ class AiController extends Controller
             $jsonPayload = json_encode($data, JSON_UNESCAPED_UNICODE);
 
             if ($jsonPayload === false) {
-                Yii::error("JSON encode hiba: " . json_last_error_msg(), 'api');
                 return "HIBA: A kérés JSON kódolása nem sikerült.";
             }
 
+            // Első próbálkozás az adott modellre
             $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonPayload);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                'Content-Type: application/json; charset=utf-8'
-            ]);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json; charset=utf-8']);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
             curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
@@ -364,7 +361,27 @@ class AiController extends Controller
             $error = curl_error($ch);
             curl_close($ch);
 
-            // Ha a válasz sikeres, azonnal visszatérünk az eredménnyel
+            // Ha 429-es korlátot kapunk, várunk 2.5 másodpercet és ÚJRAPRÓBÁLKOZUNK 1x
+            if ($httpCode === 429 || strpos($response, 'exceeded') !== false) {
+                $hadRateLimit = true;
+                usleep(2500000); // 2.5 másodperc alvás
+
+                $chRetry = curl_init($url);
+                curl_setopt($chRetry, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($chRetry, CURLOPT_POST, true);
+                curl_setopt($chRetry, CURLOPT_POSTFIELDS, $jsonPayload);
+                curl_setopt($chRetry, CURLOPT_HTTPHEADER, ['Content-Type: application/json; charset=utf-8']);
+                curl_setopt($chRetry, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($chRetry, CURLOPT_SSL_VERIFYHOST, false);
+                curl_setopt($chRetry, CURLOPT_TIMEOUT, 35);
+
+                $response = curl_exec($chRetry);
+                $httpCode = curl_getinfo($chRetry, CURLINFO_HTTP_CODE);
+                $error = curl_error($chRetry);
+                curl_close($chRetry);
+            }
+
+            // Ha sikerült a válasz
             if (!$error && $httpCode === 200) {
                 $decodedResponse = json_decode($response, true);
                 $textReply = $decodedResponse['candidates'][0]['content']['parts'][0]['text'] ?? null;
@@ -376,13 +393,15 @@ class AiController extends Controller
             $lastHttpCode = $httpCode;
             $lastResponse = $response;
 
-            // Ha nem 404-es modell-hiány hiba történt (pl. Auth hiba), nem próbálkozunk tovább
-            if ($httpCode !== 404) {
+            if (!in_array($httpCode, [404, 429, 500, 503])) {
                 break;
             }
         }
 
-        // Ha egyik modell sem vált be
+        if ($hadRateLimit) {
+            return "HIBA: Google API (429) - Quota exceeded. Please wait a few seconds.";
+        }
+
         $decodedErr = json_decode($lastResponse, true);
         $errMsg = $decodedErr['error']['message'] ?? $lastResponse;
         Yii::error("Gemini API hiba ($lastHttpCode): " . $lastResponse, 'api');

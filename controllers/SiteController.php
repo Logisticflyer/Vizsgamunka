@@ -138,7 +138,7 @@ class SiteController extends Controller
     
     public function actionChoose()
     {
-        $this->layout = 'main-no-sidebar';       
+        $this->layout = 'main';       
         return $this->render('choose');
     }
 
