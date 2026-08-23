@@ -25,9 +25,9 @@ class AiKnowledgeController extends Controller
                 'rules' => [
                     [
                         'allow' => true,
-                        'roles' => ['@'], // Csak bejelentkezett felhasználók...
+                        'roles' => ['@'], // Csak bejelentkezett felhasználók
                         'matchCallback' => function ($rule, $action) {
-                            // ... akiknek a felhasználóneve 'admin'
+                            //  akiknek a felhasználóneve 'admin'
                             return Yii::$app->user->identity->username === 'admin';
                         }
                     ],

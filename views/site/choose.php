@@ -1,6 +1,5 @@
 <?php
 
-use yii\helpers\Url;
 use yii\helpers\Html;
 
 $this->title = 'Vezérlőpult';
@@ -8,111 +7,142 @@ $this->title = 'Vezérlőpult';
 
 <div class="choose-container">
     <div class="choose-header">
-        <h2 class="mb-4">Üdvözöllek, <?= Html::encode(Yii::$app->user->identity->username) ?>!</h2>
-        <p>Válaszd ki, milyen feladaton szeretnél dolgozni.</p>
+        <h2 class="mb-2">Üdvözöllek, <?= Html::encode(Yii::$app->user->identity->username) ?>!</h2>
+        <p>
+            Válaszd ki, milyen feladaton szeretnél dolgozni. 
+            (Tipp: Használhatod az 1-<?= count($cards) ?> gyorsbillentyűket is!)
+        </p>
     </div>
 
     <div class="row justify-content-center g-4">
-        
-        <!-- AI Asszisztens Kártya -->
-        <div class="col-12 col-md-6 col-lg-3 d-flex justify-content-center">
-            <a href="<?= Url::to(['/ai/index']) ?>" class="service-card-link w-100">
-                <div class="service-card">
-                    <div class="service-icon-wrap">
-                        <i class="fas fa-robot"></i>
-                    </div>
-
-                    <h3>AI Asszisztens</h3>
-                    <p>Kérdezz az AI-tól, vagy elemezd adataidat a saját tudásbázisod alapján.</p>
-
-                    <span class="card-arrow">
-                        Megnyitás <i class="fas fa-arrow-right"></i>
-                    </span>
-                </div>
-            </a>
-        </div>
-
-        <!-- AI Automatizáció & Chatbot Kártya -->
-        <div class="col-12 col-md-6 col-lg-3 d-flex justify-content-center">
-            <a href="<?= Url::to(['/ai/automation']) ?>" class="service-card-link w-100">
-                <div class="service-card">
-                    <div class="service-icon-wrap">
-                        <i class="fas fa-cogs"></i>
-                    </div>
-
-                    <h3>AI Automatizáció</h3>
-                    <p>Ismerd meg az AI alapú munkafolyamat-optimalizációt, próbáld ki a fókuszált chatet és kérj ajánlatot!</p>
-
-                    <span class="card-arrow">
-                        Megnyitás <i class="fas fa-arrow-right"></i>
-                    </span>
-                </div>
-            </a>
-        </div>
-
-        <!-- Tudásbázis Kártya -->
-        <div class="col-12 col-md-6 col-lg-3 d-flex justify-content-center">
-            <a href="<?= Url::to(['/ai-knowledge/index']) ?>" class="service-card-link w-100">
-                <div class="service-card">
-                    <div class="service-icon-wrap">
-                        <i class="fas fa-database"></i>
-                    </div>
-
-                    <h3>Tudásbázis</h3>
-                    <p>Kezeld és bővítsd az AI tudását. Itt tárolhatod a projektekhez kapcsolódó információkat.</p>
-
-                    <span class="card-arrow">
-                        Szerkesztés <i class="fas fa-arrow-right"></i>
-                    </span>
-                </div>
-            </a>
-        </div>
-
-        <?php if (!Yii::$app->user->isGuest && Yii::$app->user->identity->username === 'admin'): ?>
-        <!-- Beérkezett Ajánlatok (Admin Kártya) -->
-        <div class="col-12 col-md-6 col-lg-3 d-flex justify-content-center">
-            <a href="<?= Url::to(['/ai/offers']) ?>" class="service-card-link w-100">
-                <div class="service-card border-primary border-opacity-25">
-                    <div class="service-icon-wrap bg-primary bg-opacity-10 text-primary">
-                        <i class="fas fa-inbox"></i>
-                    </div>
-
-                    <h3>Beérkezett Ajánlatok</h3>
-                    <p>Tekintsd át az AI automatizációs oldalon beküldött ügyféligényeket és a chat-előzményeket.</p>
-
-                    <span class="card-arrow">
-                        Leadek Megtekintése <i class="fas fa-arrow-right"></i>
-                    </span>
-                </div>
-            </a>
-        </div>
-        <?php endif; ?>
-        
+        <?php foreach ($cards as $card): ?>
+            <?= $this->render('_card', ['card' => $card]) ?>
+        <?php endforeach; ?>
     </div>
 </div>
 
 <style>
 .choose-container {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background-color: #f5f5f7;
+    background-color: #0b0d12;
     min-height: calc(100vh - 60px);
-    padding: 80px 20px;
+    padding: 60px 20px;
+    color: #f8fafc;
 }
-.choose-header { text-align: center; margin-bottom: 50px; }
-.choose-header h2 { font-size: 36px; font-weight: 700; color: #1d1d1f; margin-bottom: 12px; }
-.choose-header p { font-size: 19px; color: #86868b; max-width: 600px; margin: 0 auto; }
+.choose-header { text-align: center; margin-bottom: 40px; }
+.choose-header h2 { font-size: 34px; font-weight: 700; color: #f8fafc; margin-bottom: 10px; }
+.choose-header p { font-size: 16px; color: #94a3b8; max-width: 600px; margin: 0 auto; }
+
 .service-card-link { text-decoration: none !important; display: block; }
+
 .service-card {
-    background: #ffffff; border-radius: 20px; padding: 40px 20px; text-align: center;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03); border: 1px solid #e5e5e7;
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    display: flex; flex-direction: column; align-items: center; height: 100%;
+    background: #141824; 
+    border-radius: 20px; 
+    padding: 35px 20px; 
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); 
+    border: 1px solid #1e293b;
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    height: 100%;
+    position: relative;
+    overflow: hidden;
 }
-.service-card-link:hover .service-card { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08); border-color: #0071e3; }
-.service-icon-wrap { font-size: 32px; color: #0071e3; background: #f5f5f7; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; border-radius: 50%; margin-bottom: 25px; transition: 0.3s; }
-.service-card-link:hover .service-icon-wrap { background: #0071e3; color: #ffffff; }
-.service-card h3 { font-size: 20px; font-weight: 600; margin-bottom: 15px; color: #1d1d1f; }
-.service-card p { font-size: 14px; color: #86868b; line-height: 1.5; margin-bottom: 25px; flex-grow: 1; }
-.card-arrow { font-size: 14px; font-weight: 500; color: #0071e3; background: #f5f5f7; padding: 8px 18px; border-radius: 18px; display: flex; align-items: center; gap: 8px; transition: all 0.2s ease; }
-.service-card-link:hover .card-arrow { background: #0071e3; color: #ffffff; gap: 12px; }
+
+/* Badge és Gyorsbillentyű tároló a kártya sarkában */
+.card-badges-wrapper {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.shortcut-badge {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #94a3b8;
+    font-size: 10px;
+    font-family: monospace;
+    font-weight: 600;
+    padding: 3px 6px;
+    border-radius: 6px;
+}
+
+.card-badge {
+    background: rgba(56, 189, 248, 0.1);
+    color: #38bdf8;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+}
+
+.service-card-link:hover .service-card { 
+    transform: translateY(-8px); 
+    box-shadow: 0 20px 40px rgba(56, 189, 248, 0.1); 
+    border-color: #38bdf8; 
+}
+
+.service-icon-wrap { 
+    font-size: 28px; 
+    color: #38bdf8; 
+    background: #1e293b; 
+    width: 70px; 
+    height: 70px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    border-radius: 50%; 
+    margin-bottom: 20px; 
+    transition: 0.3s; 
+}
+
+.service-card-link:hover .service-icon-wrap { 
+    background: #38bdf8; 
+    color: #0b0d12; 
+    transform: scale(1.05);
+}
+
+.service-card h3 { font-size: 18px; font-weight: 600; margin-bottom: 12px; color: #f8fafc; }
+.service-card p { font-size: 13px; color: #94a3b8; line-height: 1.5; margin-bottom: 20px; flex-grow: 1; }
+
+.card-arrow { 
+    font-size: 13px; 
+    font-weight: 500; 
+    color: #38bdf8; 
+    background: #1e293b; 
+    padding: 8px 16px; 
+    border-radius: 16px; 
+    display: flex; 
+    align-items: center; 
+    gap: 8px; 
+    transition: all 0.25s ease; 
+}
+
+.service-card-link:hover .card-arrow { 
+    background: #38bdf8; 
+    color: #0b0d12; 
+    gap: 12px; 
+}
 </style>
+
+<script>
+document.addEventListener('keydown', function(event) {
+    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
+        return;
+    }
+
+    const key = event.key;
+    const targetLink = document.querySelector(`[data-shortcut="${key}"]`);
+    
+    if (targetLink) {
+        event.preventDefault();
+        window.location.href = targetLink.href;
+    }
+});
+</script>

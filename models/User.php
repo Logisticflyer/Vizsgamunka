@@ -2,12 +2,12 @@
 
 namespace app\models;
 
-use yii\db\ActiveRecord;
 use Yii;
+use yii\db\ActiveRecord;
 use yii\web\IdentityInterface; 
 
 /**
- * This is the model class for table "user".
+ * Model class for table "user".
  *
  * @property int $id
  * @property string $username
@@ -20,10 +20,15 @@ use yii\web\IdentityInterface;
  * @property int $updated_at
  * @property int $auth_key_expire
  */
-class User extends \yii\db\ActiveRecord implements IdentityInterface 
+class User extends ActiveRecord implements IdentityInterface 
 {
     const STATUS_DELETED = 0;
     const STATUS_ACTIVE = 10;
+
+    /**
+     * Virtuális tulajdonság a profil űrlapon történő jelszóváltáshoz
+     */
+    public $password;
 
     /**
      * {@inheritdoc}
@@ -34,21 +39,56 @@ class User extends \yii\db\ActiveRecord implements IdentityInterface
     }
 
     /**
+     * Getter a password mezőhöz az ActiveForm hiba megelőzésére
+     */
+    public function getPassword()
+    {
+        return null;
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function rules()
     {
         return [
+            [['username', 'email'], 'required'],
             [['password_reset_token'], 'default', 'value' => null],
             [['status'], 'default', 'value' => self::STATUS_ACTIVE],
-            [['username', 'auth_key', 'password_hash', 'email', 'created_at', 'updated_at', 'auth_key_expire'], 'required'],
             [['status', 'created_at', 'updated_at', 'auth_key_expire'], 'integer'],
             [['username', 'auth_key'], 'string', 'max' => 32],
             [['password_hash', 'password_reset_token', 'email'], 'string', 'max' => 255],
-            [['username'], 'unique'],
-            [['email'], 'unique'],
+            [['password'], 'string', 'min' => 6],
+            [['email'], 'email'],
+            [['username'], 'unique', 'when' => function($model) { return $model->isAttributeChanged('username'); }],
+            [['email'], 'unique', 'when' => function($model) { return $model->isAttributeChanged('email'); }],
             [['password_reset_token'], 'unique'],
         ];
+    }
+
+    /**
+     * Új jelszó hash-elése és automatikus időbélyeg frissítés mentés előtt
+     */
+    public function beforeSave($insert)
+    {
+        if (parent::beforeSave($insert)) {
+            if ($insert) {
+                if (empty($this->auth_key)) {
+                    $this->generateAuthKey();
+                }
+                if (empty($this->created_at)) {
+                    $this->created_at = time();
+                }
+            }
+            
+            $this->updated_at = time();
+
+            if (!empty($this->password)) {
+                $this->setPassword($this->password);
+            }
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -58,15 +98,15 @@ class User extends \yii\db\ActiveRecord implements IdentityInterface
     {
         return [
             'id' => Yii::t('app', 'ID'),
-            'username' => Yii::t('app', 'Username'),
+            'username' => Yii::t('app', 'Felhasználónév'),
             'auth_key' => Yii::t('app', 'Auth Key'),
             'password_hash' => Yii::t('app', 'Password Hash'),
             'password_reset_token' => Yii::t('app', 'Password Reset Token'),
-            'email' => Yii::t('app', 'Email'),
-            'status' => Yii::t('app', 'Status'),
-            'created_at' => Yii::t('app', 'Created At'),
-            'updated_at' => Yii::t('app', 'Updated At'),
-            'auth_key_expire' => Yii::t('app', 'Auth Key Expire'),
+            'email' => Yii::t('app', 'E-mail cím'),
+            'status' => Yii::t('app', 'Státusz'),
+            'created_at' => Yii::t('app', 'Létrehozva'),
+            'updated_at' => Yii::t('app', 'Módosítva'),
+            'auth_key_expire' => Yii::t('app', 'Auth Key Lejárat'),
         ];
     }
 
@@ -74,97 +114,78 @@ class User extends \yii\db\ActiveRecord implements IdentityInterface
     // IDENTITY INTERFACE METÓDUSOK
     // =========================================================================
 
-    /**
-     * Felhasználó keresése ID alapján. 
-     * Csak az aktív (status = 10) felhasználókat engedjük be!
-     */
     public static function findIdentity($id)
     {
         return static::findOne(['id' => $id, 'status' => self::STATUS_ACTIVE]);
     }
 
-    /**
-     * Token alapú keresés
-     */
     public static function findIdentityByAccessToken($token, $type = null)
     {
         return null;
     }
 
-    /**
-     * Visszaadja a bejelentkezett felhasználó egyedi azonosítóját
-     */
     public function getId()
     {
         return $this->id;
     }
 
-    /**
-     * Visszaadja az automatikus beléptetéshez (Remember Me) használt kulcsot
-     */
     public function getAuthKey()
     {
         return $this->auth_key;
     }
 
-    /**
-     * Ellenőrzi az Auth Key-t
-     */
     public function validateAuthKey($authKey)
     {
         return $this->getAuthKey() === $authKey;
     }
 
     // =========================================================================
-    // EGYÉB BIZTONSÁGI ÉS KERESŐ METÓDUSOK
+    // BIZTONSÁGI ÉS KERESŐ METÓDUSOK
     // =========================================================================
 
     /**
-     * Felhasználó keresése felhasználónév vagy email alapján
+     * Felhasználó keresése felhasználónév vagy email alapján (Precíz SQL zárójelezéssel)
      */
     public static function findByUsername($username)
     {
         return static::find()
-            ->where(['username' => $username, 'status' => self::STATUS_ACTIVE])
-            ->orWhere(['email' => $username, 'status' => self::STATUS_ACTIVE])
+            ->where(['or', ['username' => $username], ['email' => $username]])
+            ->andWhere(['status' => self::STATUS_ACTIVE])
             ->one();
     }
 
-    /**
-     * Jelszó ellenőrzése
-     */
+    public static function findByPasswordResetToken($token)
+    {
+        if (empty($token) || !is_string($token)) {
+            return null;
+        }
+
+        return static::findOne([
+            'password_reset_token' => $token,
+            'status' => self::STATUS_ACTIVE,
+        ]);
+    }
+
     public function validatePassword($password)
     {
         return Yii::$app->security->validatePassword($password, $this->password_hash);
     }
 
-    /**
-     * Új jelszó hash generálása (Ez hiányzott a profil szerkesztéshez!)
-     */
     public function setPassword($password)
     {
         $this->password_hash = Yii::$app->security->generatePasswordHash($password);
     }
 
-    /**
-     * Auth Key generálása (Ez hiányzott a regisztrációhoz és a jelszócseréhez!)
-     */
     public function generateAuthKey()
     {
         $this->auth_key = Yii::$app->security->generateRandomString();
     }
 
-    /**
-     * Jelszó visszaállító token generálása
-     */
     public function generatePasswordResetToken()
     {
         $this->password_reset_token = Yii::$app->security->generateRandomString() . '_' . time();
     }
 
-    /**
-     * Jelszó visszaállító token törlése
-     */
     public function removePasswordResetToken()
     {
         $this->password_reset_token = null;

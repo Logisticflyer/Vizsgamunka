@@ -13,7 +13,7 @@ $config = [
     ],
     'components' => [
         'request' => [
-            'baseUrl' => '/vizsgamunka/web',
+            'baseUrl' => '',
             'cookieValidationKey' => '8JBN6Cf8c-zjB7buBMKpiMQzXor_9Cyt',
         ],
         'cache' => [
@@ -38,8 +38,8 @@ $config = [
             'transport' => [
                 'scheme' => 'smtps',
                 'host' => 'smtp.gmail.com',
-                'username' => 'mesznermat696@gmail.com', // Írd ide a saját Gmail címedet
-                'password' => 'atsdlioebwpmvvkw', // Szóközök nélkül!
+                'username' => 'mesznermat696@gmail.com', 
+                'password' => 'atsdlioebwpmvvkw', 
                 'port' => 465,
             ],
         ],

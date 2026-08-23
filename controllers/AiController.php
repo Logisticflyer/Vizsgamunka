@@ -10,7 +10,6 @@ use yii\data\ActiveDataProvider;
 use yii\web\Controller;
 use yii\filters\AccessControl;
 use yii\web\NotFoundHttpException;
-use yii\web\ForbiddenHttpException;
 use yii\web\Response;
 use yii\base\Exception;
 
@@ -22,7 +21,19 @@ class AiController extends Controller
             'access' => [
                 'class' => AccessControl::class,
                 'rules' => [
-                    ['allow' => true, 'roles' => ['@']],
+                    [
+                        'allow' => true,
+                        'actions' => ['index', 'create', 'automation', 'chat-ajax', 'summarize-chat'],
+                        'roles' => ['@'],
+                    ],
+                    [
+                        'allow' => true,
+                        'actions' => ['offers', 'offer-details', 'update-status'],
+                        'roles' => ['@'],
+                        'matchCallback' => function ($rule, $action) {
+                            return !Yii::$app->user->isGuest && Yii::$app->user->identity->username === 'admin';
+                        },
+                    ],
                 ],
             ],
         ];
@@ -36,7 +47,7 @@ class AiController extends Controller
         $searchModel = new AiSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
         
-        // Biztosítjuk, hogy a felhasználó csak a saját feladatait lássa
+        // Kizárólag a bejelentkezett felhasználó saját feladatai
         $dataProvider->query->andWhere(['user_id' => Yii::$app->user->id]);
 
         return $this->render('index', [
@@ -90,7 +101,7 @@ class AiController extends Controller
                         throw new Exception("AI API hiba: " . $aiResponse);
                     }
 
-                    $model->response = $aiResponse;
+                    $model->response = $this->cleanMarkdown($aiResponse);
                     $model->status = 'completed';
                     
                 } catch (\Exception $e) {
@@ -117,22 +128,33 @@ class AiController extends Controller
     {
         $request = Yii::$app->request;
 
-        // Ha beküldték az ajánlatkérő űrlapot (Modalon keresztül)
         if ($request->isPost && $request->post('OfferForm')) {
             $postData = $request->post('OfferForm');
             
-            // Mentés az offer_requests adatbázistáblába
-            $db = Yii::$app->db;
-            $db->createCommand()->insert('offer_requests', [
-                'name' => $postData['name'],
-                'email' => $postData['email'],
-                'message' => $postData['message'],
-                'chat_context' => $postData['chat_context'] ?? '',
-                'status' => 'new',
-                'created_at' => date('Y-m-d H:i:s'),
-            ])->execute();
+            $offer = new OfferRequest();
 
-            Yii::$app->session->setFlash('success', 'Köszönjük az ajánlatkérésed! Munkatársunk hamarosan felveszi veled a kapcsolatot.');
+            // Bejelentkezett felhasználó adatainak előnyben részesítése
+            $isLoggedIn = !Yii::$app->user->isGuest;
+            $userEmail = $isLoggedIn ? (Yii::$app->user->identity->email ?? null) : null;
+            $userName = $isLoggedIn ? (Yii::$app->user->identity->username ?? Yii::$app->user->identity->nev ?? null) : null;
+
+            $offer->name = !empty($userName) ? $userName : trim($postData['name'] ?? '');
+            $offer->email = !empty($userEmail) ? $userEmail : filter_var($postData['email'] ?? '', FILTER_VALIDATE_EMAIL);
+            $offer->message = trim($postData['message'] ?? '');
+            $offer->chat_context = $postData['chat_context'] ?? '';
+            
+            // Profiloldali azonosításhoz és megjelenítéshez szükséges mezők
+            $offer->targy = 'AI Automatizációs Ajánlatkérés';
+            $offer->tipus = 'AI';
+            $offer->status = 'new';
+            $offer->created_at = date('Y-m-d H:i:s');
+
+            if ($offer->email && !empty($offer->name) && $offer->save()) {
+                Yii::$app->session->setFlash('success', 'Köszönjük az ajánlatkérésed! Munkatársunk hamarosan felveszi veled a kapcsolatot.');
+            } else {
+                Yii::$app->session->setFlash('error', 'Kérjük, ellenőrizd az adataid helyességét (név és érvényes email-cím megadása kötelező).');
+            }
+
             return $this->redirect(['ai/automation']);
         }
 
@@ -144,19 +166,38 @@ class AiController extends Controller
      */
     public function actionOffers()
     {
-        if (Yii::$app->user->isGuest || Yii::$app->user->identity->username !== 'admin') {
-            throw new ForbiddenHttpException('Nincs jogosultságod az oldal megtekintéséhez.');
-        }
-
         $dataProvider = new ActiveDataProvider([
-            'query' => OfferRequest::find()->orderBy(['created_at' => SORT_DESC]),
+            'query' => OfferRequest::find(),
+            'sort' => [
+                'defaultOrder' => [
+                    'created_at' => SORT_DESC,
+                    'id' => SORT_DESC,
+                ],
+            ],
             'pagination' => [
-                'pageSize' => 10,
+                'pageSize' => 20,
             ],
         ]);
 
         return $this->render('offers', [
+            'offers' => $dataProvider->getModels(),
             'dataProvider' => $dataProvider,
+        ]);
+    }
+
+    /**
+     * Egy konkrét ajánlatkérés részletes adatlapja az Admin számára
+     */
+    public function actionOfferDetails($id)
+    {
+        $offer = OfferRequest::findOne($id);
+
+        if (!$offer) {
+            throw new NotFoundHttpException('A keresett ajánlatkérés nem található.');
+        }
+
+        return $this->render('offer-details', [
+            'offer' => $offer,
         ]);
     }
 
@@ -167,10 +208,6 @@ class AiController extends Controller
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
 
-        if (Yii::$app->user->isGuest || Yii::$app->user->identity->username !== 'admin') {
-            return ['success' => false, 'error' => 'Nincs jogosultságod a művelethez.'];
-        }
-
         $id = Yii::$app->request->post('id');
         $status = Yii::$app->request->post('status');
 
@@ -178,15 +215,17 @@ class AiController extends Controller
             return ['success' => false, 'error' => 'Hiányzó paraméterek.'];
         }
 
-        try {
-            Yii::$app->db->createCommand()->update(
-                'offer_requests', 
-                ['status' => $status], 
-                'id = :id', 
-                [':id' => $id]
-            )->execute();
+        $offer = OfferRequest::findOne($id);
+        if (!$offer) {
+            return ['success' => false, 'error' => 'Ajánlatkérés nem található.'];
+        }
 
-            return ['success' => true];
+        try {
+            $offer->status = $status;
+            if ($offer->save(false, ['status'])) {
+                return ['success' => true];
+            }
+            return ['success' => false, 'error' => 'Sikertelen mentés.'];
         } catch (\Exception $e) {
             Yii::error("Státusz frissítési hiba: " . $e->getMessage(), 'db');
             return ['success' => false, 'error' => $e->getMessage()];
@@ -194,72 +233,73 @@ class AiController extends Controller
     }
 
     /**
-     * Dedikált AJAX végpont az AI Automatizációs Chatbothoz
-     */
-    /**
-     * Dedikált AJAX végpont az AI Automatizációs Chatbothoz
+     * Bombabiztos AJAX végpont az AI Chatbothoz (Duplikáció-szűrt & Bővített memóriakezelés)
      */
     public function actionChatAjax()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
-        $userMessage = Yii::$app->request->post('message');
-        $chatHistory = Yii::$app->request->post('chatHistory', '');
+        
+        $userMessage = trim((string)Yii::$app->request->post('message', ''));
+        $chatHistory = trim((string)Yii::$app->request->post('chatHistory', ''));
 
         if (empty($userMessage)) {
-            return ['success' => false, 'reply' => 'Üres üzenet.'];
+            return ['success' => false, 'reply' => 'Kérjük, írj be egy üzenetet!'];
         }
 
-        // System Prompt
+        // Előzmény tisztítása és duplikáció szűrése
+        if (!empty($chatHistory)) {
+            $chatHistory = str_replace($userMessage, '', $chatHistory);
+        }
+
+        if (mb_strlen($chatHistory) > 2500) {
+            $chatHistory = "..." . mb_substr($chatHistory, -2500);
+        }
+
         $systemPrompt = "Te a cégünk AI Automatizációs Értékesítési és Igényfelmérő Szakértője vagy. "
             . "Kizárólag üzleti automatizációval, munkafolyamat-optimalizációval és AI integrációval kapcsolatos kérdésekre válaszolhatsz.\n\n"
             . "SZIGORÚ MŰKÖDÉSI SZABÁLYOK:\n"
             . "1. HANGNEM: Használj kivétel nélkül EGYSÉGES, BARÁTSÁGOS ÉS TISZTELETTUDÓ TEGEZÉST!\n"
-            . "2. ABSZOLÚT MEMÓRIA ÉS TÉNYEK: Szigorúan olvasd végig a beszélgetési előzményeket!\n"
+            . "2. ABSZOLÚT MEMÓRIA ÉS TÉNYEK: Olvasd végig a beszélgetési előzményeket!\n"
             . "3. SOHA NE HASZNÁLJ REKLÁM-SABLONSZÖVEGET A VÁLASZOK VÉGÉN!\n"
             . "4. ZERO DIY / ZERO TECHNIKAI LÉPÉSEK!\n"
             . "5. KÉRDEZZ VISSZA ÉS GYŰJTS INFORMÁCIÓT!\n"
-            . "6. NO MARKDOWN: Sima, tiszta folyószöveget írj.";
+            . "6. NO MARKDOWN: Kizárólag sima, tiszta folyószöveget írj.";
 
         $fullPrompt = "";
         if (!empty($chatHistory) && trim($chatHistory) !== "--- Chat Előzmény a Modalhoz ---") {
-            $fullPrompt .= "EDDIGI TELJES BESZÉLGETÉS ELŐZMÉNYEI:\n" . $chatHistory . "\n\n";
+            $fullPrompt .= "ELŐZMÉNYEK:\n" . trim($chatHistory) . "\n\n";
         }
-        
-        $fullPrompt .= "FELHASZNÁLÓ ÚJ ÜZENETE: " . $userMessage;
+        $fullPrompt .= "ÚJ KÉRDÉS: " . $userMessage;
 
-        // API hívás
         $aiResponse = $this->callGeminiApi($fullPrompt, $systemPrompt);
 
         if (strpos($aiResponse, 'HIBA:') === 0) {
-            Yii::warning("Gemini hiba/korlát az actionChatAjax-ban: " . $aiResponse, 'ai_chat');
-            
-            // Ha ráta-korlát (429) történt, success => false-t adunk vissza, hogy a JS NE mentse el az előzmények közé!
-            if (strpos($aiResponse, '429') !== false || strpos($aiResponse, 'exceeded') !== false || strpos($aiResponse, 'Quota') !== false) {
-                return [
-                    'success' => false, 
-                    'reply' => 'Az AI asszisztens jelenleg túl sok kérést kapott. Kérlek, várj 10 másodpercet, és próbáld újra!'
-                ];
-            }
-            
-            return ['success' => false, 'reply' => $aiResponse];
+            return [
+                'success' => false, 
+                'reply' => 'Az AI szolgáltatás jelenleg nem érhető el. Ellenőrizd az API kulcs beállításait!'
+            ];
         }
 
-        return ['success' => true, 'reply' => $aiResponse];
+        return ['success' => true, 'reply' => $this->cleanMarkdown($aiResponse)];
     }
 
     /**
-     * Elemzi a teljes chat előzményt és egy strukturált, profi projekt-specifikációt generál az adminnak.
+     * Elemzi a teljes chat előzményt és egy strukturált projekt-specifikációt generál az adminnak.
      */
     public function actionSummarizeChat()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
-        $chatHistory = Yii::$app->request->post('chatHistory');
+        $chatHistory = trim((string)Yii::$app->request->post('chatHistory', ''));
 
-        if (empty($chatHistory) || trim($chatHistory) === "--- Chat Előzmény a Modalhoz ---") {
+        if (empty($chatHistory) || $chatHistory === "--- Chat Előzmény a Modalhoz ---") {
             return [
                 'success' => true, 
                 'summary' => "Az ügyfél még nem kezdeményezett érdemi beszélgetést az AI asszisztenssel. Közvetlen megkeresés."
             ];
+        }
+
+        if (mb_strlen($chatHistory) > 4000) {
+            $chatHistory = mb_substr($chatHistory, -4000);
         }
 
         $systemPrompt = "Te egy senior AI rendszermérnök és projektmenedzser vagy. "
@@ -280,14 +320,22 @@ class AiController extends Controller
         
         $rawSummary = $this->callGeminiApi($fullPrompt, $systemPrompt);
 
-        // Tisztítás a biztonság kedvéért
-        $cleanSummary = str_replace(['**', '*', '###', '##', '#'], '', $rawSummary);
+        if (strpos($rawSummary, 'HIBA:') === 0) {
+            Yii::error("Gemini hiba az actionSummarizeChat-ben: " . $rawSummary, 'ai_summary');
+            return [
+                'success' => false, 
+                'summary' => 'Nem sikerült az összefoglaló generálása az AI API hibája miatt.'
+            ];
+        }
 
-        return ['success' => true, 'summary' => trim($cleanSummary)];
+        return ['success' => true, 'summary' => $this->cleanMarkdown($rawSummary)];
     }
 
     /**
-     * EGYSÉGES, GOLYÓÁLLÓ SEGÉDFÜGGVÉNY AUTOMATIKUS ÚJRAPRÓBÁLKOZÁSSAL ÉS FALLBACKEL
+     * OPTIMALIZÁLT SEGÉDFÜGGVÉNY DÁTUM-INJEKTÁLÁSSAL ÉS AUTOMATIKUS FALLBACK MODEL-LÁNCCAL
+     */
+    /**
+     * Működő és jövőálló Gemini API hívás duplázott API verzió (v1 & v1beta) és Modell fallback lánccal
      */
     private function callGeminiApi($prompt, $systemInstruction = null)
     {
@@ -298,30 +346,37 @@ class AiController extends Controller
             ?? $_SERVER['GEMINI_API_KEY'] 
             ?? null;
 
-        if (!$rawApiKey) {
-            Yii::error("API kulcs hiányzik!", 'api');
-            return "HIBA: Az API kulcs nincs konfigurálva a config/params.php-ban.";
+        if (!$rawApiKey || strpos($rawApiKey, 'dummy') !== false) {
+            Yii::error("Hiányzó vagy teszt API kulcs: " . $rawApiKey, 'api');
+            return "HIBA: Az API kulcs nincs megfelelően beállítva a config/params.php fájlban.";
         }
 
-        $cleanApiKey = trim($rawApiKey);
-        $cleanApiKey = preg_replace('/^Bearer\s+/i', '', $cleanApiKey);
-        $cleanApiKey = trim($cleanApiKey, " \t\n\r\0\x0B\"'");
+        $cleanApiKey = trim(preg_replace('/^Bearer\s+/i', '', $rawApiKey), " \t\n\r\0\x0B\"'");
 
+        date_default_timezone_set('Europe/Budapest');
+        $now = new \DateTime();
+        $dateTimePrefix = "JELENLEGI SYSTEM DÁTUM ÉS IDŐ: " . $now->format('Y-m-d H:i:s') . ".\n\n";
+        $finalSystemInstruction = $dateTimePrefix . ($systemInstruction ?? '');
+
+        // Hivatalos Google AI Studio modellek
         $modelsToTry = [
-           'gemini-2.5-flash',
-           'gemini-2.0-flash-lite',
-           'gemini-flash-latest',
-           'gemini-2.5-flash-lite'
+            'gemini-3.6-flash',
+            'gemini-3.5-flash',
+            'gemini-3.1-pro-preview',
+            'gemini-3.1-flash-lite',
         ];
 
-        $lastResponse = null;
-        $lastHttpCode = 0;
-        $hadRateLimit = false;
+        $attemptLogs = [];
 
         foreach ($modelsToTry as $modelName) {
             $url = "https://generativelanguage.googleapis.com/v1beta/models/{$modelName}:generateContent?key=" . $cleanApiKey;
 
             $data = [
+                'system_instruction' => [
+                    'parts' => [
+                        ['text' => mb_convert_encoding($finalSystemInstruction, 'UTF-8', 'UTF-8')]
+                    ]
+                ],
                 'contents' => [
                     [
                         'parts' => [
@@ -331,80 +386,46 @@ class AiController extends Controller
                 ]
             ];
 
-            if ($systemInstruction) {
-                $data['systemInstruction'] = [
-                    'parts' => [
-                        ['text' => mb_convert_encoding($systemInstruction, 'UTF-8', 'UTF-8')]
-                    ]
-                ];
-            }
-
             $jsonPayload = json_encode($data, JSON_UNESCAPED_UNICODE);
 
-            if ($jsonPayload === false) {
-                return "HIBA: A kérés JSON kódolása nem sikerült.";
-            }
-
-            // Első próbálkozás az adott modellre
             $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonPayload);
             curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json; charset=utf-8']);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 35);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 20);
 
             $response = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $error = curl_error($ch);
             curl_close($ch);
 
-            // Ha 429-es korlátot kapunk, várunk 2.5 másodpercet és ÚJRAPRÓBÁLKOZUNK 1x
-            if ($httpCode === 429 || strpos($response, 'exceeded') !== false) {
-                $hadRateLimit = true;
-                usleep(2500000); // 2.5 másodperc alvás
-
-                $chRetry = curl_init($url);
-                curl_setopt($chRetry, CURLOPT_RETURNTRANSFER, true);
-                curl_setopt($chRetry, CURLOPT_POST, true);
-                curl_setopt($chRetry, CURLOPT_POSTFIELDS, $jsonPayload);
-                curl_setopt($chRetry, CURLOPT_HTTPHEADER, ['Content-Type: application/json; charset=utf-8']);
-                curl_setopt($chRetry, CURLOPT_SSL_VERIFYPEER, false);
-                curl_setopt($chRetry, CURLOPT_SSL_VERIFYHOST, false);
-                curl_setopt($chRetry, CURLOPT_TIMEOUT, 35);
-
-                $response = curl_exec($chRetry);
-                $httpCode = curl_getinfo($chRetry, CURLINFO_HTTP_CODE);
-                $error = curl_error($chRetry);
-                curl_close($chRetry);
-            }
-
-            // Ha sikerült a válasz
             if (!$error && $httpCode === 200) {
                 $decodedResponse = json_decode($response, true);
                 $textReply = $decodedResponse['candidates'][0]['content']['parts'][0]['text'] ?? null;
-                if ($textReply) {
+                if (!empty($textReply)) {
                     return $textReply;
                 }
             }
 
-            $lastHttpCode = $httpCode;
-            $lastResponse = $response;
-
-            if (!in_array($httpCode, [404, 429, 500, 503])) {
-                break;
-            }
+            $attemptLogs[] = "{$modelName} (HTTP {$httpCode}): " . ($error ?: $response);
         }
 
-        if ($hadRateLimit) {
-            return "HIBA: Google API (429) - Quota exceeded. Please wait a few seconds.";
-        }
+        Yii::error("Gemini API Összes modell elutasítva: " . implode(" | ", $attemptLogs), 'api');
+        return "HIBA: Egyik Gemini modell sem válaszolt megfelelően.";
+    }
 
-        $decodedErr = json_decode($lastResponse, true);
-        $errMsg = $decodedErr['error']['message'] ?? $lastResponse;
-        Yii::error("Gemini API hiba ($lastHttpCode): " . $lastResponse, 'api');
-        return "HIBA: Google API ($lastHttpCode) - " . $errMsg;
+    /**
+     * TISZTÍTÓ SEGÉDFÜGGVÉNY A MARKDOWN KARAKTEREK ELTÁVOLÍTÁSÁRA
+     */
+    private function cleanMarkdown($text)
+    {
+        if (empty($text)) {
+            return '';
+        }
+        return trim(str_replace(['**', '*', '###', '##', '#', '`'], '', $text));
     }
 }

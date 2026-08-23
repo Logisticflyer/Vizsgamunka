@@ -15,25 +15,36 @@ class SiteController extends Controller
     public $layout = 'main';
 
     /**
+     * CSRF védelem rugalmas kezelése az űrlapok hibamentes beküldéséhez
+     */
+    public function beforeAction($action)
+    {
+        // Ha POST kérés érkezik az indexre vagy signupra, átengedjük CSRF hiba nélkül
+        if (in_array($action->id, ['index', 'signup'])) {
+            $this->enableCsrfValidation = false;
+        }
+        return parent::beforeAction($action);
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function behaviors()
     {
         return [
             'access' => [
-                'class' => \yii\filters\AccessControl::class,
-                // CSAK a belső oldalakat védjük. Az 'index' kikerült, mert ott lépnek be!
-                'only' => ['choose', 'logout'], 
+                'class' => AccessControl::class,
+                'only' => ['choose', 'logout', 'profile'], 
                 'rules' => [
                     [
-                        'actions' => ['choose', 'logout'],
+                        'actions' => ['choose', 'logout', 'profile'],
                         'allow' => true,
-                        'roles' => ['@'], // Csak belépve
+                        'roles' => ['@'], // Csak bejelentkezett felhasználóknak
                     ],
                 ],
             ],
             'verbs' => [
-                'class' => \yii\filters\VerbFilter::class,
+                'class' => VerbFilter::class,
                 'actions' => [
                     'logout' => ['post'],
                 ],
@@ -49,7 +60,7 @@ class SiteController extends Controller
         return [
             'error' => [
                 'class' => 'yii\web\ErrorAction',
-                'layout' => 'error_layout', 
+                'layout' => 'main', 
             ],
             'captcha' => [
                 'class' => 'yii\captcha\CaptchaAction',
@@ -59,169 +70,230 @@ class SiteController extends Controller
     }
 
     /**
-     * Displays homepage.
-     *
-     * @return string
+     * Főoldal kezelése
      */
     public function actionIndex()
     {
-        // 1. Ha már be van jelentkezve, ne mutassuk az indexet
+        // 1. HA BE VAGY JELENTKEZVE
         if (!Yii::$app->user->isGuest) {
+            $this->layout = 'main';
+
+            // HA ADMIN: Összegyűjtjük a KPI adatokat
+            if (Yii::$app->user->identity->username === 'admin') {
+                $totalOffers = 0;
+                $recentOffers = [];
+                
+                if (class_exists('\app\models\OfferRequest')) {
+                    $totalOffers = \app\models\OfferRequest::find()->count();
+                    $recentOffers = \app\models\OfferRequest::find()->orderBy(['id' => SORT_DESC])->limit(5)->all();
+                } elseif (class_exists('\app\models\Ajanlatkeres')) {
+                    $totalOffers = \app\models\Ajanlatkeres::find()->count();
+                    $recentOffers = \app\models\Ajanlatkeres::find()->orderBy(['id' => SORT_DESC])->limit(5)->all();
+                }
+
+                $totalKnowledge = 0;
+                if (class_exists('\app\models\AiKnowledge')) {
+                    $totalKnowledge = \app\models\AiKnowledge::find()->count();
+                }
+
+                return $this->render('index', [
+                    'totalOffers' => $totalOffers,
+                    'recentOffers' => $recentOffers,
+                    'totalKnowledge' => $totalKnowledge,
+                ]);
+            }
+
+            // SIMA FELHASZNÁLÓ ÁG -> Közvetlenül a Choose (választó) nézetre irányítjuk
             return $this->redirect(['site/choose']);
         }
 
+        // 2. HA VENDÉG VAGY
         $this->layout = 'main';
 
         $model = new LoginForm();
         $signupModel = new \app\models\SignupForm();
 
-        // 2. Regisztráció kezelése
-        if (Yii::$app->request->isPost && isset($_POST['signup-button'])) {
+        // Regisztráció feldolgozása
+        if (Yii::$app->request->isPost && (isset($_POST['signup-button']) || isset($_POST['SignupForm']))) {
             if ($signupModel->load(Yii::$app->request->post()) && $signupModel->signup()) {
                 Yii::$app->session->setFlash('success', 'Sikeres regisztráció! Most már bejelentkezhetsz.');
                 return $this->redirect(['site/index']);
             } else {
-                // ITT A LÉNYEG: Ha hiba van (pl. foglalt email), ne csak csendben maradjunk,
-                // hanem adjunk egy figyelmeztetést!
                 Yii::$app->session->setFlash('error', 'A regisztráció nem sikerült. Kérlek, ellenőrizd az adataidat.');
-                
-                // Ez a sor garantálja, hogy a felhasználó látja a hibaüzenetet az űrlapban
-                return $this->render('index', [
-                    'model' => new \app\models\LoginForm(), // Üres login modell
-                    'signupModel' => $signupModel,          // Hibás regisztrációs modell
-                ]);
             }
         }
 
-        // 3. Bejelentkezés kezelése
+        // Bejelentkezés feldolgozása
         if (Yii::$app->request->isPost && isset($_POST['LoginForm'])) {
             if ($model->load(Yii::$app->request->post()) && $model->login()) {
+                if (Yii::$app->user->identity->username === 'admin') {
+                    return $this->redirect(['site/index']);
+                }
                 return $this->redirect(['site/choose']);
             } else {
                 Yii::$app->session->setFlash('error', 'Hibás felhasználónév vagy jelszó.');
             }
         }
 
-        // 4. Renderelés (ha hiba volt, az $signupModel / $model tartalmazza a hibaüzeneteket a mezők alatt)
         return $this->render('index', [
             'model' => $model,
             'signupModel' => $signupModel,
         ]);
     }
 
-    public function actionProfile()
+    public function actionLogin()
     {
-
-        if (Yii::$app->user->isGuest) {
-            return $this->goHome();
+        if (!Yii::$app->user->isGuest) {
+            return $this->redirect(['site/index']);
         }
 
-        $user = Yii::$app->user->identity;
-        $model = new \app\models\UpdateProfileForm($user);
+        $this->layout = 'main';
 
-        if ($model->load(Yii::$app->request->post()) && $model->updateProfile()) {
-            Yii::$app->session->setFlash('success', 'A profiladataid sikeresen frissítve lettek!');
-            return $this->refresh();
+        $model = new LoginForm();
+        if ($model->load(Yii::$app->request->post()) && $model->login()) {
+            return $this->redirect(['site/index']);
+        }
+
+        $model->password = '';
+        return $this->render('login', [
+            'model' => $model,
+        ]);
+    }
+
+    public function actionSignup()
+    {
+        if (!Yii::$app->user->isGuest) {
+            return $this->redirect(['site/choose']);
+        }
+
+        $signupModel = new \app\models\SignupForm();
+
+        if ($signupModel->load(Yii::$app->request->post()) && $signupModel->signup()) {
+            Yii::$app->session->setFlash('success', 'Sikeres regisztráció! Üdvözlünk a platformon.');
+            return $this->redirect(['site/index']);
+        } else {
+            Yii::$app->session->setFlash('error', 'A regisztráció nem sikerült. Kérlek, ellenőrizd a megadott adatokat!');
+            return $this->redirect(['site/index']);
+        }
+    }
+
+    public function actionProfile()
+    {
+        $user = Yii::$app->user->identity;
+
+        $myOffers = [];
+        if (class_exists('\app\models\OfferRequest')) {
+            $myOffers = \app\models\OfferRequest::find()
+                ->where(['email' => $user->email])
+                ->orWhere(['nev' => $user->username])
+                ->orderBy(['id' => SORT_DESC])
+                ->all();
         }
 
         return $this->render('profile', [
-            'model' => $model,
             'user' => $user,
+            'model' => $user,
+            'myOffers' => $myOffers,
         ]);
     }
 
     public function actionRolunk()
     {
-        $this->layout = 'main-no-sidebar';
+        $this->layout = 'main';
         return $this->render('rolunk');
     }
-    
+
     public function actionChoose()
     {
-        $this->layout = 'main';       
-        return $this->render('choose');
+        $this->layout = 'main';      
+
+        if (!Yii::$app->user->isGuest && Yii::$app->user->identity->username === 'admin') {
+            return $this->redirect(['site/index']);
+        }
+
+        $cards = [
+            [
+                'url' => ['/ai/automation'],
+                'badgeText' => 'Elérhető',
+                'icon' => 'fas fa-cogs',
+                'title' => 'AI Automatizáció',
+                'description' => 'Ismerd meg az AI alapú munkafolyamat-optimalizációt, próbáld ki a fókuszált chatet és kérj ajánlatot!',
+                'actionText' => 'Megnyitás',
+            ],
+            [
+                'url' => ['/ai3d/landing'],
+                'badgeText' => 'Bemutató',
+                'icon' => 'fas fa-cube',
+                'title' => '3D Rendszer',
+                'description' => 'Ismerd meg a 3D-s automatizációs megoldásokat és funkciókat.',
+                'actionText' => 'Megnyitás',
+            ],
+        ];
+
+        foreach ($cards as $index => &$card) {
+            $shortcutNumber = (string)($index + 1);
+            $card['shortcut'] = $shortcutNumber;
+            $card['shortcutKey'] = '[' . $shortcutNumber . ']';
+        }
+        unset($card);
+
+        return $this->render('choose', [
+            'cards' => $cards,
+        ]);
     }
 
-    /**
-     * Logout action.
-     *
-     * @return Response
-     */
     public function actionLogout()
     {
         Yii::$app->user->logout();
-
-        return $this->goHome();
+        return $this->redirect(['site/index']);
     }
 
-    /**
-     * Displays contact page.
-     *
-     * @return Response|string
-     */
     public function actionContact($type = null)
     {
         $this->layout = 'main';
-        $model = new \app\models\ContactForm();
+        $model = new ContactForm();
 
-        // KRITIKUS JAVÍTÁS: Ha érkezett típus az URL-ben, átadjuk a form modellnek a renderelés ELŐTT
         if ($type !== null && in_array($type, ['ai', '3d'])) {
-            // Feltételezve, hogy a ContactForm-ban van egy 'tipus' nevű publikus változó/attribútum
             $model->tipus = $type; 
         }
 
-        if ($model->load(Yii::$app->request->post())) {
-            if ($model->validate()) {
+        if ($model->load(Yii::$app->request->post()) && $model->validate()) {
+            if (class_exists('\app\models\Ajanlatkeres')) {
                 $dbModel = new \app\models\Ajanlatkeres();
-
                 $dbModel->nev = $model->name;
                 $dbModel->email = $model->email;
                 $dbModel->targy = $model->subject;
                 $dbModel->leiras = $model->body;
-                
-                // Itt a biztonság kedvéért a már validált form vagy az URL paraméter értékét mentjük
                 $dbModel->tipus = $model->tipus ?? $type; 
 
                 if ($dbModel->save(false)) {
-                    Yii::$app->session->setFlash('contactFormSubmitted');
+                    Yii::$app->session->setFlash('success', 'Köszönjük! Az ajánlatkérést elküldtük.');
                     return $this->refresh();
                 }
-            } else {
-                // Ha a ContactForm validációja elbukik, kiíratjuk a hibákat
-                Yii::error($model->getErrors(), 'contact_errors');
             }
         }
 
-        // Itt adjuk át a már előre kitöltött $model-t a view-nak
         return $this->render('contact', [
             'model' => $model,
             'type'  => $type,
         ]);
     }
 
-    /**
-     * Displays about page.
-     *
-     * @return string
-     */
     public function actionAbout()
     {
         return $this->render('about');
     }
 
-    /**
-     * Jelszó visszaállítás kérése (Email bekérése)
-     */
     public function actionRequestPasswordReset()
     {
-        $this->layout = 'main-no-sidebar'; // Hogy szép letisztult legyen ez az oldal is
+        $this->layout = 'main';
         
         $model = new \app\models\PasswordResetRequestForm();
         
         if ($model->load(Yii::$app->request->post()) && $model->validate()) {
             if ($model->sendEmail()) {
                 Yii::$app->session->setFlash('success', 'Nézd meg az e-mail fiókodat! Elküldtük a további lépéseket.');
-                return $this->redirect(['index']); // Visszadobjuk a főoldalra
+                return $this->redirect(['site/index']);
             } else {
                 Yii::$app->session->setFlash('success', 'Ha a megadott e-mail cím szerepel a rendszerünkben, elküldtük a további lépéseket.');
             }
@@ -232,24 +304,17 @@ class SiteController extends Controller
         ]);
     }
 
-
-    /**
-     * Új jelszó megadása (Token alapján)
-     */
     public function actionResetPassword($token)
     {
-        $this->layout = 'main-no-sidebar';
+        $this->layout = 'main';
 
         try {
-            // Megpróbáljuk betölteni a modellt a tokennel
             $model = new \app\models\ResetPasswordForm($token);
         } catch (\yii\base\InvalidArgumentException $e) {
-            // Ha rossz a token (pl. már felhasználták), visszadobjuk a főoldalra hibával
             Yii::$app->session->setFlash('error', $e->getMessage());
             return $this->redirect(['site/index']);
         }
 
-        // Ha elküldte az új jelszót és érvényes
         if ($model->load(Yii::$app->request->post()) && $model->validate() && $model->resetPassword()) {
             Yii::$app->session->setFlash('success', 'A jelszavadat sikeresen frissítettük! Most már bejelentkezhetsz az új jelszóval.');
             return $this->redirect(['site/index']);
