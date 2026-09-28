@@ -2,8 +2,18 @@
 
 return [
     'class' => 'yii\db\Connection',
-    'dsn' => 'mysql:host=mysql;dbname=vizsgamunka;charset=utf8mb4',
-    'username' => 'vizsgamunka_user',
-    'password' => 'vizsgamunka_pass',
+    'dsn' => sprintf(
+        'mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4',
+        $_ENV['DB_HOST'] ?? '127.0.0.1',
+        $_ENV['DB_PORT'] ?? '3306',
+        $_ENV['DB_NAME'] ?? 'vizsgamunka'
+    ),
+    'username' => $_ENV['DB_USER'] ?? 'root',
+    'password' => $_ENV['DB_PASS'] ?? '',
     'charset' => 'utf8mb4',
+
+    // Schema cache kikapcsolva marad fejlesztői környezetben
+    // 'enableSchemaCache' => true,
+    // 'schemaCacheDuration' => 3600,
+    // 'schemaCache' => 'cache',
 ];

@@ -11,6 +11,18 @@ $config = [
         '@bower' => '@vendor/bower-asset',
         '@npm'   => '@vendor/npm-asset',
     ],
+
+    // =========================================================================
+    // REPOSITORY & DI KONTÉNER BEÁLLÍTÁSA (SRP ARCHITEKTÚRA)
+    // =========================================================================
+    'container' => [
+        'definitions' => [
+            // Amikor a kód UserRepositoryInterface-t kér, a Yii2 automatikusan
+            // a UserRepository osztályt fogja példányosítani és átadni.
+            \app\repositories\UserRepositoryInterface::class => \app\repositories\UserRepository::class,
+        ],
+    ],
+
     'components' => [
         'request' => [
             'baseUrl' => '',

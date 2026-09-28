@@ -32,6 +32,14 @@
         "codeception/module-filesystem": "^3.0 || ^2.0 || ^1.1",
         "codeception/verify": "^3.0 || ^2.2"
     },
+    "autoload": {
+        "psr-4": {
+            "app\\": ""
+        },
+        "files": [
+            "vendor/yiisoft/yii2/Yii.php"
+        ]
+    },
     "config": {
         "allow-plugins": {
             "yiisoft/yii2-composer" : true
@@ -60,10 +68,12 @@
                 }
             ]
         },
-        "yii\\composer\\Installer::postInstall": {
-            "generateCookieValidationKey": [
-                "config/web.php"
-            ]
+        "yii\\composer": {
+            "postInstall": {
+                "generateCookieValidationKey": [
+                    "config/web.php"
+                ]
+            }
         }
     },
     "repositories": [

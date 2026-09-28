@@ -9,10 +9,25 @@ use yii\web\Response;
 use yii\filters\VerbFilter;
 use app\models\LoginForm;
 use app\models\ContactForm;
+use app\services\UserService;
 
 class SiteController extends Controller
 {
     public $layout = 'main';
+
+    /**
+     * @var UserService A felhasználói üzleti logikát kezelő szolgáltatás
+     */
+    private UserService $userService;
+
+    /**
+     * Konstruktor a Dependency Injection (DI) támogatásához
+     */
+    public function __construct($id, $module, UserService $userService, $config = [])
+    {
+        $this->userService = $userService;
+        parent::__construct($id, $module, $config);
+    }
 
     /**
      * CSRF védelem rugalmas kezelése az űrlapok hibamentes beküldéséhez
@@ -113,13 +128,16 @@ class SiteController extends Controller
         $model = new LoginForm();
         $signupModel = new \app\models\SignupForm();
 
-        // Regisztráció feldolgozása
+        // Regisztráció feldolgozása az új UserService használatával
         if (Yii::$app->request->isPost && (isset($_POST['signup-button']) || isset($_POST['SignupForm']))) {
-            if ($signupModel->load(Yii::$app->request->post()) && $signupModel->signup()) {
-                Yii::$app->session->setFlash('success', 'Sikeres regisztráció! Most már bejelentkezhetsz.');
-                return $this->redirect(['site/index']);
-            } else {
-                Yii::$app->session->setFlash('error', 'A regisztráció nem sikerült. Kérlek, ellenőrizd az adataidat.');
+            if ($signupModel->load(Yii::$app->request->post())) {
+                $user = $this->userService->register($signupModel);
+                if ($user !== null) {
+                    Yii::$app->session->setFlash('success', 'Sikeres regisztráció! Most már bejelentkezhetsz.');
+                    return $this->redirect(['site/index']);
+                } else {
+                    Yii::$app->session->setFlash('error', 'A regisztráció nem sikerült. Kérlek, ellenőrizd az adataidat.');
+                }
             }
         }
 
@@ -168,13 +186,16 @@ class SiteController extends Controller
 
         $signupModel = new \app\models\SignupForm();
 
-        if ($signupModel->load(Yii::$app->request->post()) && $signupModel->signup()) {
-            Yii::$app->session->setFlash('success', 'Sikeres regisztráció! Üdvözlünk a platformon.');
-            return $this->redirect(['site/index']);
-        } else {
-            Yii::$app->session->setFlash('error', 'A regisztráció nem sikerült. Kérlek, ellenőrizd a megadott adatokat!');
-            return $this->redirect(['site/index']);
+        if ($signupModel->load(Yii::$app->request->post())) {
+            $user = $this->userService->register($signupModel);
+            if ($user !== null) {
+                Yii::$app->session->setFlash('success', 'Sikeres regisztráció! Üdvözlünk a platformon.');
+                return $this->redirect(['site/index']);
+            }
         }
+
+        Yii::$app->session->setFlash('error', 'A regisztráció nem sikerült. Kérlek, ellenőrizd a megadott adatokat!');
+        return $this->redirect(['site/index']);
     }
 
     public function actionProfile()

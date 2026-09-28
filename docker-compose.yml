@@ -1,10 +1,13 @@
-﻿services:
+﻿version: '3.8'
+
+services:
   mysql:
     image: mysql:8.0
     container_name: vizsgamunka_mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_ROOT_PASSWORD: ''
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
       MYSQL_DATABASE: vizsgamunka
       MYSQL_USER: vizsgamunka_user
       MYSQL_PASSWORD: vizsgamunka_pass
@@ -13,7 +16,7 @@
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqldump", "--user=root", "--password=rootpassword", "--no-data", "vizsgamunka"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -34,6 +37,7 @@
     environment:
       DB_HOST: mysql
       DB_USER: vizsgamunka_user
+      DB_PASS: vizsgamunka_pass
       DB_PASSWORD: vizsgamunka_pass
       DB_NAME: vizsgamunka
 

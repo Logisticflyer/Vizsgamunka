@@ -2,18 +2,36 @@
 
 namespace app\models;
 
-use Yii;
 use yii\base\Model;
-use app\models\User;
 
+/**
+ * Class SignupForm
+ * 
+ * Felelősség: Kizárólag a regisztrációs űrlap adatainak tárolása és a beviteli mezők validációja.
+ * Az SRP (Egyfelelősségi elv) értelmében nem végez adatbázis-mentést és üzleti logikát;
+ * a mentést a UserService és UserRepository kezeli.
+ */
 class SignupForm extends Model
 {
+    /**
+     * @var string A regisztráló felhasználó neve
+     */
     public $username;
+
+    /**
+     * @var string A regisztráló e-mail címe
+     */
     public $email;
+
+    /**
+     * @var string A regisztráló jelszava
+     */
     public $password;
 
     /**
-     * Ellenőrzési (validációs) szabályok
+     * Ellenőrzési (validációs) szabályok definiálása
+     *
+     * @return array
      */
     public function rules()
     {
@@ -34,6 +52,8 @@ class SignupForm extends Model
 
     /**
      * Mezők emberi feliratai
+     *
+     * @return array
      */
     public function attributeLabels()
     {
@@ -42,33 +62,5 @@ class SignupForm extends Model
             'email' => 'E-mail cím',
             'password' => 'Jelszó',
         ];
-    }
-
-    /**
-     * A felhasználó mentése az adatbázisba
-     */
-    public function signup()
-    {
-        if (!$this->validate()) {
-            return null; 
-        }
-
-        $user = new User();
-        $user->username = $this->username;
-        $user->email = $this->email;
-        $user->setPassword($this->password);
-        $user->generateAuthKey();
-        $user->status = User::STATUS_ACTIVE; // 10-es aktív státusz
-        
-        $currentTime = time();
-        $user->created_at = $currentTime;
-        $user->updated_at = $currentTime;
-        $user->auth_key_expire = $currentTime + (30 * 24 * 60 * 60); 
-
-        if ($user->save(false)) {
-            return $user;
-        }
-
-        return null;
     }
 }
