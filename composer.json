@@ -40,6 +40,11 @@
             "vendor/yiisoft/yii2/Yii.php"
         ]
     },
+    "autoload-dev": {
+        "psr-4": {
+            "tests\\": "tests/"
+        }
+    },
     "config": {
         "allow-plugins": {
             "yiisoft/yii2-composer" : true

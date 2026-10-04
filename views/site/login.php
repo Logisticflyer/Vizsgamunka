@@ -8,7 +8,7 @@ use yii\bootstrap5\ActiveForm;
 use yii\helpers\Html;
 use yii\helpers\Url;
 
-$this->title = 'Bejelentkezés & Regisztráció';
+$this->title = 'Login';
 ?>
 
 <div class="site-auth-wrapper min-vh-100 d-flex align-items-center justify-content-center py-5">
@@ -21,10 +21,10 @@ $this->title = 'Bejelentkezés & Regisztráció';
                     <div class="d-inline-flex align-items-center justify-content-center rounded-3 mb-4 p-3" style="background: rgba(56, 189, 248, 0.12); color: #38bdf8;">
                         <i class="fas fa-robot fa-2x"></i>
                     </div>
-                    <h1 class="display-5 fw-extrabold text-white mb-3" style="letter-spacing: -1px; font-weight: 800;">
+                    <h2 class="display-5 fw-extrabold text-white mb-3" style="letter-spacing: -1px; font-weight: 800;">
                         Digitális Precizitás<br>
                         <span style="color: #38bdf8;">& Automatizáció</span>
-                    </h1>
+                    </h2>
                     <p class="lead fs-6" style="line-height: 1.6; color: #94a3b8 !important;">
                         Üdvözlünk a platformon. Optimalizáld a munkafolyamataidat fejlett AI asszisztensekkel vagy egyedi 3D tervezéssel egyetlen, letisztult felületen.
                     </p>
@@ -56,6 +56,7 @@ $this->title = 'Bejelentkezés & Regisztráció';
 
                 <!-- 1. BEJELENTKEZÉSI ŰRLAP -->
                 <div id="form-login-container">
+                    <h1 class="visually-hidden">Login</h1>
                     <?php $form = ActiveForm::begin([
                         'id' => 'login-form',
                         'fieldConfig' => [

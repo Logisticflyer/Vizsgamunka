@@ -12,7 +12,10 @@ use app\models\User;
 class UserRepository implements UserRepositoryInterface
 {
     /**
-     * {@inheritdoc}
+     * Felhasználó keresése azonosító (ID) alapján.
+     * 
+     * @param int $id
+     * @return User|null Visszaadja a megtalált User objektumot, vagy null-t, ha nem létezik.
      */
     public function findById(int $id): ?User
     {
@@ -20,7 +23,10 @@ class UserRepository implements UserRepositoryInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Felhasználó keresése e-mail cím alapján.
+     * 
+     * @param string $email
+     * @return User|null Visszaadja a megtalált User objektumot, vagy null-t, ha nem létezik.
      */
     public function findByEmail(string $email): ?User
     {
@@ -39,7 +45,10 @@ class UserRepository implements UserRepositoryInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Felhasználó elmentése az adatbázisba.
+     * 
+     * @param User $user
+     * @return bool Igaz, ha a mentés sikeres volt.
      */
     public function save(User $user): bool
     {

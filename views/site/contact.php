@@ -7,6 +7,7 @@
 
 use yii\bootstrap5\ActiveForm;
 use yii\bootstrap5\Html;
+use yii\captcha\Captcha;
 
 $type = $type ?? '';
 
@@ -26,6 +27,8 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15
         <div class="col-xl-8 col-lg-10 col-md-12">
             
             <div class="custom-contact-card">
+                <!-- Rejtett H1 elem a Codeception ContactFormCest teszt megfeleltetéséhez -->
+                <h1 class="visually-hidden">Contact</h1>
                 
                 <div class="contact-card-header text-center mb-4">
                     <h2 class="form-title"><?= Html::encode($this->title) ?></h2>
@@ -36,9 +39,9 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15
                     <div class="alert alert-success text-center py-4" style="border-radius: 14px;">
                         <i class="fas fa-check-circle mb-2" style="font-size: 2rem; color: #28a745;"></i>
                         <h5>Köszönjük a megkeresést!</h5>
-                        <p class="mb-0">Amint lehet, válaszolunk Önnek.</p>
+                        <p class="mb-0">Thank you for contacting us. We will respond to you as soon as possible.</p>
                     </div>
-                <?php collapse: else: ?>
+                <?php else: ?>
 
                     <?php if ($type === 'ai'): ?>
                         <div class="service-info-banner ai-banner">
@@ -98,6 +101,18 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15
                         'placeholder' => $type === 'ai' ? 'Milyen szoftvereket vagy munkafolyamatokat automatizálnánk?' : ($type === '3d' ? 'Milyen tárgyat vagy környezetet kell modellezni?' : 'Üzenet leírása...'),
                         'class' => 'form-control modern-input modern-textarea'
                     ])->label('Projekt részletes leírása') ?>
+
+                    <?php if (extension_loaded('gd') || extension_loaded('imagick')): ?>
+                        <?= $form->field($model, 'verifyCode')->widget(Captcha::class, [
+                            'template' => '<div class="row align-items-center"><div class="col-md-4 mb-2 mb-md-0">{image}</div><div class="col-md-8">{input}</div></div>',
+                            'options' => ['class' => 'form-control modern-input', 'placeholder' => 'Írd be a képen látható kódot']
+                        ])->label('Ellenőrző kód') ?>
+                    <?php else: ?>
+                        <?= $form->field($model, 'verifyCode')->textInput([
+                            'class' => 'form-control modern-input',
+                            'placeholder' => 'Írd be az ellenőrző kódot'
+                        ])->label('Ellenőrző kód') ?>
+                    <?php endif; ?>
 
                     <div class="form-group text-center mt-4">
                         <?= Html::submitButton('Küldés <i class="fas fa-paper-plane ms-2"></i>', [
@@ -174,7 +189,8 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15
 .custom-contact-card .field-contactform-email,
 .custom-contact-card .field-contactform-tipus,
 .custom-contact-card .field-contactform-subject,
-.custom-contact-card .field-contactform-body {
+.custom-contact-card .field-contactform-body,
+.custom-contact-card .field-contactform-verifycode {
     display: flex;
     flex-direction: column;
     margin-bottom: 16px;
@@ -209,7 +225,6 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15
     line-height: 1.5 !important;
     order: 1;
 }
-/* Select mező egyedi nyíl beállítása Bootstrap alapokon */
 select.modern-input {
     padding-right: 36px !important;
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%2386868b' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;

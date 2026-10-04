@@ -11,3 +11,7 @@ require_once __DIR__ . '/../vendor/yiisoft/yii2/Yii.php';
 
 // 3. Teszt gyökér alias regisztrálása
 Yii::setAlias('@tests', __DIR__);
+
+$config = require __DIR__ . '/../config/test.php';
+
+new yii\web\Application($config);

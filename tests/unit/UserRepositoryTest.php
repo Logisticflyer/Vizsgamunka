@@ -51,6 +51,8 @@ class UserRepositoryTest extends Unit
         $user->status = User::STATUS_ACTIVE;
         $user->created_at = time();
         $user->updated_at = time();
+        // Hozzáadva: A MySQL NOT NULL 'auth_key_expire' mezőjének feltöltése (30 napos lejárattal)
+        $user->auth_key_expire = time() + (30 * 24 * 60 * 60);
 
         // 2. Mentés tesztelése a repository-n keresztül
         $isSaved = $this->userRepository->save($user);

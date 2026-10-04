@@ -14,6 +14,7 @@ use yii\web\IdentityInterface;
  * @property string $auth_key
  * @property string $password_hash
  * @property string|null $password_reset_token
+ * @property string|null $access_token
  * @property string $email
  * @property int $status
  * @property int $created_at
@@ -53,11 +54,11 @@ class User extends ActiveRecord implements IdentityInterface
     {
         return [
             [['username', 'email'], 'required'],
-            [['password_reset_token'], 'default', 'value' => null],
+            [['password_reset_token', 'access_token'], 'default', 'value' => null],
             [['status'], 'default', 'value' => self::STATUS_ACTIVE],
             [['status', 'created_at', 'updated_at', 'auth_key_expire'], 'integer'],
             [['username', 'auth_key'], 'string', 'max' => 32],
-            [['password_hash', 'password_reset_token', 'email'], 'string', 'max' => 255],
+            [['password_hash', 'password_reset_token', 'access_token', 'email'], 'string', 'max' => 255],
             [['password'], 'string', 'min' => 6],
             [['email'], 'email'],
             [['username'], 'unique', 'when' => function($model) { return $model->isAttributeChanged('username'); }],
@@ -102,6 +103,7 @@ class User extends ActiveRecord implements IdentityInterface
             'auth_key' => Yii::t('app', 'Auth Key'),
             'password_hash' => Yii::t('app', 'Password Hash'),
             'password_reset_token' => Yii::t('app', 'Password Reset Token'),
+            'access_token' => Yii::t('app', 'Access Token'),
             'email' => Yii::t('app', 'E-mail cím'),
             'status' => Yii::t('app', 'Státusz'),
             'created_at' => Yii::t('app', 'Létrehozva'),
@@ -121,7 +123,7 @@ class User extends ActiveRecord implements IdentityInterface
 
     public static function findIdentityByAccessToken($token, $type = null)
     {
-        return null;
+        return static::findOne(['access_token' => $token, 'status' => self::STATUS_ACTIVE]);
     }
 
     public function getId()

@@ -3,10 +3,24 @@
 namespace tests\unit\models;
 
 use app\models\LoginForm;
+use tests\unit\fixtures\UserFixture;
 
 class LoginFormTest extends \Codeception\Test\Unit
 {
     private $model;
+
+    /**
+     * Fixture beállítása a tesztadatok automatikus betöltéséhez az adatbázisba.
+     */
+    public function _fixtures()
+    {
+        return [
+            'profiles' => [
+                'class' => UserFixture::class,
+                'dataFile' => '@app/tests/unit/fixtures/data/user.php'
+            ]
+        ];
+    }
 
     protected function _after()
     {

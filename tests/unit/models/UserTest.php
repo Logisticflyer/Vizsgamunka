@@ -3,9 +3,32 @@
 namespace tests\unit\models;
 
 use app\models\User;
+use yii\test\ActiveFixture;
 
+/**
+ * UserTest - A User modell unit tesztje.
+ */
 class UserTest extends \Codeception\Test\Unit
 {
+    /**
+     * @var \UnitTester
+     */
+    protected $tester;
+
+    /**
+     * Beállítja a teszthez szükséges adatbázis-fixtúrákat a gyári ActiveFixture segítségével.
+     */
+    public function _fixtures()
+    {
+        return [
+            'users' => [
+                'class' => ActiveFixture::class,
+                'modelClass' => User::class,
+                'dataFile' => codecept_data_dir() . 'user.php',
+            ],
+        ];
+    }
+
     public function testFindUserById()
     {
         verify($user = User::findIdentity(100))->notEmpty();
