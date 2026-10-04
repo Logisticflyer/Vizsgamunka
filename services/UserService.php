@@ -9,8 +9,8 @@ use app\repositories\UserRepositoryInterface;
 /**
  * Class UserService
  *
- * Felelősség: A felhasználókkal kapcsolatos üzleti logika (pl. regisztráció folyamata)
- * koordinálása az SRP elvnek megfelelően.
+ * Felelősség: A felhasználókkal kapcsolatos üzleti logika (pl. regisztráció folyamata,
+ * felhasználók keresése) koordinálása az SRP elvnek megfelelően.
  */
 class UserService
 {
@@ -61,5 +61,27 @@ class UserService
         }
 
         return null;
+    }
+
+    /**
+     * Felhasználó keresése azonosító (ID) alapján a Repository-n keresztül.
+     *
+     * @param int $id A felhasználó azonosítója
+     * @return User|null
+     */
+    public function findById(int $id): ?User
+    {
+        return $this->userRepository->findById($id);
+    }
+
+    /**
+     * Felhasználó keresése felhasználónév alapján a Repository-n keresztül.
+     *
+     * @param string $username A keresett felhasználónév
+     * @return User|null
+     */
+    public function findByUsername(string $username): ?User
+    {
+        return $this->userRepository->findByUsername($username);
     }
 }

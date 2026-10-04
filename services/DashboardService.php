@@ -8,14 +8,17 @@ use app\models\Ajanlatkeres;
 use app\models\AiKnowledge;
 
 /**
- * A műszerfalhoz és ajánlatkérésekhez kapcsolódó üzleti logikát kezelő szolgáltatás.
+ * Class DashboardService
+ * 
+ * Felelősség (SRP): A műszerfalhoz (KPI adatok), a profiloldali ajánlatkérésekhez 
+ * és a kapcsolatfelvételi ajánlatok mentéséhez kapcsolódó üzleti logika kezelése.
  */
 class DashboardService
 {
     /**
      * Összegyűjti az adminisztrátori műszerfalhoz (KPI) szükséges adatokat.
      * 
-     * @return array
+     * @return array Az összegzett műszerfal adatok (összes ajánlat, legutóbbiak, tudásbázis)
      */
     public function getAdminDashboardData(): array
     {
@@ -45,8 +48,8 @@ class DashboardService
     /**
      * Lekéri a megadott felhasználóhoz tartozó ajánlatkéréseket a profiloldalhoz.
      * 
-     * @param object $user
-     * @return array
+     * @param object $user A bejelentkezett felhasználó entitása vagy objektuma
+     * @return array A felhasználóhoz tartozó ajánlatkérések listája
      */
     public function getUserOffers(object $user): array
     {
@@ -71,10 +74,10 @@ class DashboardService
      * Elmenti a kapcsolatfelvételi űrlapon keresztül beküldött ajánlatkérést.
      * 
      * @param object $model ContactForm modell
-     * @param string|null $type
-     * @return bool
+     * @param string|null $type Az ajánlatkérés opciója vagy típusa
+     * @return bool Igaz, ha a mentés sikeres volt
      */
-    public function saveContactOffer(object $model, ?string $type): bool
+    public function saveContactOffer(object $model, ?string $type = null): bool
     {
         if (class_exists(Ajanlatkeres::class)) {
             $dbModel = new Ajanlatkeres();

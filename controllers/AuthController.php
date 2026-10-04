@@ -13,7 +13,7 @@ use app\models\ResetPasswordForm;
 use app\services\UserService;
 
 /**
- * AuthController - Kizárólag az autentikációért és jelszókezelésért felel (SRP).
+ * AuthController - Kizárólag az autentikációért és jelszókezelésért felelős vezérlő (SRP).
  */
 class AuthController extends Controller
 {
@@ -22,14 +22,24 @@ class AuthController extends Controller
     private UserService $userService;
 
     /**
-     * Konstruktor alapú függőségbefecskendezés (DI)
+     * Konstruktor alapú függőség-befecskendezés (Dependency Injection).
+     *
+     * @param string $id A vezérlő azonosítója
+     * @param mixed $module A modul, amelyhez a vezérlő tartozik
+     * @param UserService $userService A felhasználói üzleti logikát kezelő szerviz
+     * @param array $config További konfigurációs paraméterek
      */
-    public function __construct($id, $module, UserService $userService, $config = [])
+    public function __construct($id, $module, UserService $userService, array $config = [])
     {
         $this->userService = $userService;
         parent::__construct($id, $module, $config);
     }
 
+    /**
+     * Viselkedési szabályok (Bejelentkezett felhasználók szűrése, HTTP metódusok).
+     *
+     * @return array
+     */
     public function behaviors()
     {
         return [
@@ -54,7 +64,9 @@ class AuthController extends Controller
     }
 
     /**
-     * Bejelentkezés kezelése
+     * Bejelentkezés kezelése.
+     *
+     * @return string|\yii\web\Response
      */
     public function actionLogin()
     {
@@ -72,7 +84,9 @@ class AuthController extends Controller
     }
 
     /**
-     * Regisztráció kezelése
+     * Regisztráció kezelése a UserService segítségével.
+     *
+     * @return string|\yii\web\Response
      */
     public function actionSignup()
     {
@@ -95,7 +109,9 @@ class AuthController extends Controller
     }
 
     /**
-     * Kijelentkezés
+     * Kijelentkezés kezelése.
+     *
+     * @return \yii\web\Response
      */
     public function actionLogout()
     {
@@ -104,7 +120,9 @@ class AuthController extends Controller
     }
 
     /**
-     * Jelszó-visszaállítási kérelem
+     * Jelszó-visszaállítási kérelem kezelése.
+     *
+     * @return string|\yii\web\Response
      */
     public function actionRequestPasswordReset()
     {
@@ -122,7 +140,10 @@ class AuthController extends Controller
     }
 
     /**
-     * Jelszó beállítása token alapján
+     * Jelszó beállítása token alapján.
+     *
+     * @param string $token A jelszó-visszaállító token
+     * @return string|\yii\web\Response
      */
     public function actionResetPassword($token)
     {
