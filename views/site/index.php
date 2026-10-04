@@ -4,10 +4,14 @@
 /** @var yii\bootstrap5\ActiveForm $form */
 /** @var app\models\LoginForm $model */
 /** @var app\models\SignupForm $signupModel */
+/** @var int|null $totalOffers */
+/** @var int|null $totalKnowledge */
+/** @var array|null $recentOffers */
 
 use yii\bootstrap5\ActiveForm;
 use yii\helpers\Html;
 use yii\helpers\Url;
+use app\widgets\OfferCardWidget;
 
 // Biztonsági inicializálás vendég módhoz
 if (!isset($model)) {
@@ -84,9 +88,9 @@ $this->title = !Yii::$app->user->isGuest ? 'Adminisztrációs Vezérlőpult' : '
                         <tbody>
                             <?php foreach ($recentOffers as $offer): ?>
                                 <tr class="text-white">
-                                    <td>#<?= Html::encode($offer->id) ?></td>
+                                    <td>#<?= Html::encode($offer->id ?? '') ?></td>
                                     <td><?= Html::encode($offer->nev ?? $offer->name ?? '-') ?></td>
-                                    <td><?= Html::encode($offer->email) ?></td>
+                                    <td><?= Html::encode($offer->email ?? '-') ?></td>
                                     <td><?= Html::encode($offer->targy ?? $offer->subject ?? '-') ?></td>
                                 </tr>
                             <?php endforeach; ?>
