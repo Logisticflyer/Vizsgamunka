@@ -150,7 +150,7 @@ $this->title = !Yii::$app->user->isGuest ? 'Adminisztrációs Vezérlőpult' : '
                     <div id="form-login-container">
                         <?php $form = ActiveForm::begin([
                             'id' => 'login-form',
-                            'action' => Url::to(['site/index']),
+                            'action' => Url::to(['site/login']), // MÓDOSÍTVA: Mivel korábban site/index volt, most a site/login akcióra mutat!
                             'fieldConfig' => [
                                 'template' => "{label}\n{input}\n{error}",
                                 'labelOptions' => ['class' => 'form-label fw-semibold text-white small mb-1', 'style' => 'color: #f8fafc !important;'],
@@ -192,7 +192,7 @@ $this->title = !Yii::$app->user->isGuest ? 'Adminisztrációs Vezérlőpult' : '
                     <div id="form-register-container" class="d-none">
                         <?php $signupForm = ActiveForm::begin([
                             'id' => 'signup-form',
-                            'action' => Url::to(['site/index']),
+                            'action' => Url::to(['site/signup']), // MÓDOSÍTVA: Mivel korábban site/index volt, most a site/signup akcióra mutat!
                             'fieldConfig' => [
                                 'template' => "{label}\n{input}\n{error}",
                                 'labelOptions' => ['class' => 'form-label fw-semibold text-white small mb-1', 'style' => 'color: #f8fafc !important;'],
